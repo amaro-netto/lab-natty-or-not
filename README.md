@@ -1,4 +1,4 @@
-# FaceGen Pro v3.5: Branding & Identity Suite 🤖🎨
+# FaceGen Pro v3.5: Branding & Identity Suite
 
 ![Badge Gemini](https://img.shields.io/badge/AI-Gemini%202.5%20Flash-blue?style=for-the-badge&logo=google)
 ![Badge Firebase](https://img.shields.io/badge/Backend-Firebase-orange?style=for-the-badge&logo=firebase)
