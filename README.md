@@ -31,7 +31,7 @@ Diferente de gerar uma imagem aleatória, esta ferramenta utiliza a API do **Goo
 
 #### Outros Prints
 
-<img src="assets/1.png" style="max-height: 500px;"> <img src="assets/2.png" style="max-height: 500px;"> <img src="assets/3.png" style="max-height: 500px;">
+<img src="assets/1.png" style="width: 300px;"> <img src="assets/2.png" style="width: 300px;"> <img src="assets/3.png" style="width: 300px;">
 
 ## Engenharia por Trás do "Fake Natty"
 
