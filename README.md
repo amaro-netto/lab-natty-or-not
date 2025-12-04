@@ -42,7 +42,7 @@ O sistema possui um módulo de câmara que captura o rosto do utilizador em dois
 * **Processamento:** O algoritmo recorta as imagens em proporção 9:16 e cria uma fusão ("stitch") das duas perspetivas numa única textura.
 * **Resultado:** Fornece ao modelo Gemini uma compreensão volumétrica do rosto, superior a uma simples foto 2D.
   
-![1---Processamento-e-Fusão-3D-(Stitching)](https://github.com/user-attachments/assets/35bbe791-bfbe-46b0-8fe6-f7a2272ce859)
+<img width="2876" height="2284" alt="01---Processamento-e-Fusão-3D-(Stitching)" src="https://github.com/user-attachments/assets/73e66018-7b34-45d4-8ecd-adf8329f2543" />
 
 ### 2. "System Instructions" Dinâmicas
 O código injeta instruções de sistema diferentes baseadas no tipo de geração:
