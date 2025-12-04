@@ -1,6 +1,6 @@
 # **FaceGen Pro: Diário de Engenharia e Arquitetura de Solução**
 
-**Autor:**Amaro Amarante da Silva Netto **Stack:** JavaScript (Vanilla), Tailwind CSS, Firebase, Google Gemini 2.5 Flash. **Contexto:** Desafio "Natural ou Fake Natty?"
+**Autor:** Amaro Amarante da Silva Netto **Stack:** JavaScript (Vanilla), Tailwind CSS, Firebase, Google Gemini 2.5 Flash. **Contexto:** Desafio "Natural ou Fake Natty?"
 
 ## **1\. Introdução: A Tese do Produto**
 
