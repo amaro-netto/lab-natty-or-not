@@ -41,11 +41,17 @@ O realismo extremo ("Natty") é alcançado através de um pipeline técnico comp
 O sistema possui um módulo de câmara que captura o rosto do utilizador em dois ângulos (frontal e perfil).
 * **Processamento:** O algoritmo recorta as imagens em proporção 9:16 e cria uma fusão ("stitch") das duas perspetivas numa única textura.
 * **Resultado:** Fornece ao modelo Gemini uma compreensão volumétrica do rosto, superior a uma simples foto 2D.
+  
+![1---Processamento-e-Fusão-3D-(Stitching)](https://github.com/user-attachments/assets/35bbe791-bfbe-46b0-8fe6-f7a2272ce859)
 
 ### 2. "System Instructions" Dinâmicas
 O código injeta instruções de sistema diferentes baseadas no tipo de geração:
 * **Modo Humano:** Ativa o protocolo `MULTI-FACE IDENTITY TRANSFER`, forçando o modelo a ignorar a pose da referência e usar apenas a biometria facial.
 * **Modo Branding (Logo):** Ativa a lógica `ADVANCED LOGO ARTISTRY`, onde o logo não é colado, mas "cresce" organicamente a partir dos elementos da imagem (ex: néon, montanhas, arquitetura).
+
+![2---Gerador-de-Imagens-(Modo-Logo-_-Branding)](https://github.com/user-attachments/assets/debfeea2-9f40-46ad-87da-44dad3fce048)
+![3---Gerador-de-Imagens-(Modo-Humano-_-Identidade)](https://github.com/user-attachments/assets/30522f4d-a94d-434b-babf-72bf575dfed8)
+![4---Gerador-de-Imagens-(Restrições-e-Prompt-Negativo)](https://github.com/user-attachments/assets/5e16e010-4c30-4944-8aca-384b0be904ae)
 
 ## Prompt Studio: O Ecossistema de Criação
 
@@ -56,17 +62,26 @@ Ao contrário de ferramentas comuns que apenas descrevem uma imagem, criei um ag
 * **A Lógica:** O sistema utiliza uma instrução de sistema rígida (*"STRICTEST RULE: ABSOLUTELY NO FACIAL DESCRIPTIONS"*) para analisar pixel a pixel a iluminação, ângulo da câmara, tecido das roupas e cenário, mas bloqueia qualquer menção a olhos, cabelo ou idade.
 * **O Objetivo:** Permitir copiar o *estilo* de uma foto famosa sem que o rosto original interfira na clonagem da própria face.
 
+![6---Prompt-Studio-(Vision-Analyst---Análise-de-Imagem)](https://github.com/user-attachments/assets/7fdd0e28-d71c-481c-9c1f-a32058fd8cc7)
+
+
 ### 2. Prompt Sanitizer (Corretor Inteligente)
 Um agente de texto que atua como "firewall" criativo.
 * **Função:** Recebe a ideia bruta do utilizador e reescreve-a, removendo automaticamente descrições físicas que geram conflito (como "olhos azuis" ou "cabelo louro"), garantindo que o modelo de geração use apenas a identidade injetada pelas fotos de referência.
+
+![7---Prompt-Studio-(Sanitizer---Refinamento-de-Texto)](https://github.com/user-attachments/assets/bd8d8042-4df9-4283-8849-84bbe0e87c21)
+
 
 ### 3. Builder Paramétrico
 Uma interface "No-Code" para construção de prompts complexos.
 * **Controle Total:** Permite selecionar variáveis técnicas como *Camera Angle* (ex: Dutch Angle, Low Angle), *Lighting* (ex: Volumetric God Rays, Cyberpunk Neon) e *Film Stock*, sintetizando tudo num prompt estruturado profissionalmente.
 
+![8---Prompt-Studio-(Builder---Construtor)](https://github.com/user-attachments/assets/078e8b7e-1e4a-4099-94de-85a92a5238c4)
+
 ### 4. Editor Integrado (Inpainting/Refinement)
 Módulo de pós-processamento que permite alterar elementos específicos da imagem gerada (ex: "Adcionar logo da Apple ao notebook, trocar a cor da gravata ou adicionar um relogio.") mantendo a consistência facial e a identidade original intactas.
 
+![5---Editor-de-Imagens-(Inpainting)](https://github.com/user-attachments/assets/5f90d181-47ad-4b23-962a-4bc30e630d6e)
 
 ## Resultados
 
