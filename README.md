@@ -27,7 +27,7 @@ Diferente de gerar uma imagem aleatória, esta ferramenta utiliza a API do **Goo
 | <img src="assets/gerador.png" style="max-height: 600px;"> | <img src="assets/editor.png" style="max-height: 600px;"> | <img src="assets/modelo3d.jpg" style="max-height: 600px;"> |
 
 > [!WARNING]
-> Por questões de segurança, cobri o rosto da imagem gerada com a câmera da aplicação.
+> Por questões de segurança, cobri meu rosto na imagem gerada pela função de Camêra 3D.
 
 #### Outros Prints
 
