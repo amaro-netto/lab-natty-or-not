@@ -65,7 +65,7 @@ Uma interface "No-Code" para construção de prompts complexos.
 * **Controle Total:** Permite selecionar variáveis técnicas como *Camera Angle* (ex: Dutch Angle, Low Angle), *Lighting* (ex: Volumetric God Rays, Cyberpunk Neon) e *Film Stock*, sintetizando tudo num prompt estruturado profissionalmente.
 
 ### 4. Editor Integrado (Inpainting/Refinement)
-Módulo de pós-processamento que permite alterar elementos específicos da imagem gerada (ex: "trocar o fato por um casaco de cabedal") mantendo a consistência facial e a identidade original intactas.
+Módulo de pós-processamento que permite alterar elementos específicos da imagem gerada (ex: "Adcionar logo da Apple ao notebook, trocar a cor da gravata ou adicionar um relogio.") mantendo a consistência facial e a identidade original intactas.
 
 
 ## Resultados
