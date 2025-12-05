@@ -608,7 +608,48 @@
             });
         });
 
-        // --- LÓGICA DE GERAÇÃO PRINCIPAL (ATUALIZADA: TRAVA DE IDENTIDADE v3.6) ---
+        // --- PIPELINE DE SANITIZAÇÃO (GENETIC FIREWALL v3.9) ---
+        async function refinePromptForIdentity(userPrompt, apiKey) {
+            try {
+                // Instrução Agressiva para o Agente Sanitizador
+                const sanitizerSystemPrompt = `
+                    CRITICAL TASK: You are a PROMPT FILTER.
+                    INPUT: A user description for an image generation.
+                    OBJECTIVE: REMOVE ALL REFERENCES to physical genetics (Eyes, Hair, Skin, Age, Ethnicity).
+                    REASON: The physical identity is provided by a reference image. The text must ONLY describe clothing, background, lighting, and action.
+
+                    RULES:
+                    1. DELETE specific eye colors (e.g., "blue eyes", "green eyes") -> DELETE.
+                    2. DELETE specific hair colors/styles (e.g., "blonde", "curly hair") -> DELETE.
+                    3. DELETE skin tone/ethnicity -> DELETE.
+                    4. KEEP makeup (lipstick, eyeliner), clothing, scene, lighting.
+
+                    Example Input: "A beautiful blonde woman with blue eyes wearing a red dress in space."
+                    Example Output: "A woman wearing a red dress in space."
+                `;
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: sanitizerSystemPrompt + `\n\nINPUT: "${userPrompt}"\nOUTPUT:` }] }],
+                        generationConfig: { temperature: 0.1 } // Baixa temperatura para ser preciso
+                    })
+                });
+
+                if (!response.ok) return userPrompt; // Se falhar, usa o original
+                const result = await response.json();
+                let cleanedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                return cleanedText ? cleanedText.trim() : userPrompt;
+
+            } catch (e) {
+                console.warn("Sanitizer failed, using original prompt", e);
+                return userPrompt;
+            }
+        }
+
+        // --- LÓGICA DE GERAÇÃO PRINCIPAL (ATUALIZADA: GENETIC FIREWALL v3.9) ---
         generateBtn.addEventListener('click', async () => {
             if (selectedFaces.length === 0) { 
                 showToast("Selecione pelo menos um item (Rosto ou Logo) na barra superior.", "error"); 
@@ -617,15 +658,29 @@
             }
             if (!promptInput.value.trim()) { showToast("Digite uma descrição."); promptInput.focus(); return; }
 
+            // Configurações iniciais
+            const apiKey = ""; // Sua chave API
+            
             generateBtn.disabled = true;
-            generateBtn.innerHTML = `<i data-lucide="loader-2" class="animate-spin mr-2"></i> Gerando...`;
             resultImage.classList.add('hidden'); resultPlaceholder.classList.add('hidden'); loadingSpinner.classList.remove('hidden');
             downloadBtn.classList.add('hidden'); downloadWebpBtn.classList.add('hidden'); sendToEditorBtn.classList.add('hidden');
 
             try {
-                let referenceContext = "";
+                let finalPrompt = promptInput.value;
                 const hasLogo = selectedFaces.some(f => f.label === 'Logo');
 
+                // --- PIPELINE DE LIMPEZA ---
+                if (!hasLogo) {
+                    generateBtn.innerHTML = `<i data-lucide="filter" class="animate-pulse mr-2"></i> Sanitizando...`;
+                    // Chama a IA para limpar o texto antes de prosseguir
+                    finalPrompt = await refinePromptForIdentity(promptInput.value, apiKey);
+                    console.log("Prompt Original:", promptInput.value);
+                    console.log("Prompt Sanitizado:", finalPrompt);
+                }
+
+                generateBtn.innerHTML = `<i data-lucide="loader-2" class="animate-spin mr-2"></i> Gerando...`;
+
+                let referenceContext = "";
                 selectedFaces.forEach((face, index) => {
                     if (face.label === 'Logo') {
                         referenceContext += `Reference Image ${index + 1} is a BRAND LOGO (Do not alter text/shape).\n`;
@@ -638,7 +693,7 @@
                 let negativePromptAddon = "";
                 
                 if (hasLogo) {
-                    // --- MODO LOGO (Mantido da v3.5) ---
+                    // MODO LOGO
                     systemInstruction = `
                         [SYSTEM INSTRUCTION: ADVANCED LOGO ARTISTRY]
                         ROLE: Expert AI Graphic Designer.
@@ -647,24 +702,20 @@
                     `;
                     negativePromptAddon = "distorted text, blurry logo";
                 } else {
-                    // --- MODO ROSTO (V3.6 - TRILHO DE IDENTIDADE RIGIDO) ---
+                    // MODO ROSTO (V3.9 - GENETIC LOCK)
+                    // AQUI ESTÁ A PROTEÇÃO DUPLA
                     systemInstruction = `
-                        [SYSTEM INSTRUCTION: IDENTITY PRESERVATION PROTOCOL v2]
+                        [SYSTEM INSTRUCTION: GENETIC LOCK V3.9]
+                        Reference Image 1 = THE SOURCE OF TRUTH.
                         
-                        🚨 CRITICAL HIERARCHY OF TRUTH:
-                        1. REFERENCE IMAGE = GENETICS (Absolute Authority).
-                           - Eye color, skin tone, bone structure, hair texture/color, ethnicity, and facial features MUST come from the image.
-                        2. TEXT PROMPT = SCENE & STYLE (Secondary Authority).
-                           - Lighting, clothing, pose, background, and artistic style come from the text.
+                        ⛔️ FORBIDDEN ACTIONS:
+                        - DO NOT change the eye color from the reference image.
+                        - DO NOT change the hair color/texture from the reference image.
+                        - DO NOT change the skin tone/ethnicity.
                         
-                        🚫 CONFLICT RESOLUTION:
-                        - IF the text says "blue eyes" but the reference has "brown eyes" -> GENERATE BROWN EYES.
-                        - IF the text says "blonde hair" but the reference has "dark hair" -> GENERATE DARK HAIR.
-                        - Ignore any text description that contradicts the physical features of the reference face.
-                        
-                        TASK: Apply the Reference Face Identity onto a body in the scene described by the user.
-                        - Maintain exact likeness.
-                        - Adapt lighting/shadows of the face to match the new scene, but NOT the features.
+                        The text prompt has been sanitized to remove genetic descriptions.
+                        If any genetic description remains, IGNORE IT.
+                        Only apply: Lighting, Background, Clothing, Pose, Makeup.
                     `;
                     negativePromptAddon = "different eyes, wrong eye color, altered facial features, different ethnicity, wrong hair color, plastic skin, face morphing";
                 }
@@ -675,15 +726,14 @@
                     [REFERENCE CONTEXT]
                     ${referenceContext}
 
-                    [USER SCENE DESCRIPTION]
-                    ${promptInput.value}
+                    [USER SCENE DESCRIPTION (SANITIZED)]
+                    ${finalPrompt}
                     
                     [TECHNICAL CONSTRAINTS]
                     Aspect Ratio: ${selectedRatio}
                     Negative Prompt: (low quality, ${negativePromptAddon}, bad anatomy, distortion).
                 `;
 
-                const apiKey = ""; 
                 const contentsParts = [{ text: fullUserPrompt }];
                 selectedFaces.forEach(face => {
                     contentsParts.push({ 
@@ -1047,7 +1097,7 @@
                 <h1 class="text-xl font-bold text-white tracking-tight">FaceGen <span class="text-indigo-500">Pro</span></h1>
             </div>
             <div class="hidden sm:block text-xs text-slate-500 bg-slate-800 px-3 py-1 rounded-full border border-slate-700 font-medium">
-                v3.6 Identity Lock
+                v3.9 Genetic Firewall
             </div>
             
             <nav class="flex space-x-1 bg-slate-800/50 p-1 rounded-xl border border-slate-700/50 overflow-x-auto max-w-full">
