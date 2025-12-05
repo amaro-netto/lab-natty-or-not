@@ -1,108 +1,60 @@
-# FaceGen Pro v3.5: Branding & Identity Suite
+# FaceGen Pro v3.9: Identity Lock & Branding Suite
 
 ![Badge Gemini](https://img.shields.io/badge/AI-Gemini%202.5%20Flash-blue?style=for-the-badge&logo=google)
 ![Badge Firebase](https://img.shields.io/badge/Backend-Firebase-orange?style=for-the-badge&logo=firebase)
-![Badge Status](https://img.shields.io/badge/Project-Fake%20Natty-green?style=for-the-badge)
+![Badge Status](https://img.shields.io/badge/Project-Genetic%20Firewall-red?style=for-the-badge)
 
 > **Projeto desenvolvido para o Desafio DIO: "Natural ou Fake Natty?"**
 
 ## Descrição
 
-O **FaceGen Pro** não é apenas uma imagem gerada por IA; é uma **aplicação web completa (SPA)** desenvolvida para resolver o maior problema da IA Generativa atual: **Consistência de Identidade e Controle de Marca.**
+O **FaceGen Pro v3.9** é uma aplicação web (SPA) de engenharia de prompt assistida. Ela resolve o trilema da geração de imagens com IA: **Consistência Facial**, **Conflito de Prompt** e **Aplicação de Marca (Branding)**.
 
-Diferente de gerar uma imagem aleatória, esta ferramenta utiliza a API do **Google Gemini 2.5** aliada a técnicas avançadas de *Prompt Engineering* e *Computer Vision* para clonar rostos com precisão "Natty" (Natural) ou criar logos artísticos integrados.
+Utilizando um pipeline de múltiplos agentes (Sanitizador -> Gerador), a ferramenta garante que a identidade visual (seja um rosto humano ou uma logo corporativa) seja preservada, independentemente do que o usuário digite no texto.
+
+## Funcionalidades Chave (v3.9)
+
+### 🧬 1. Genetic Firewall (Novo!)
+O maior problema da IA é quando o texto contradiz a imagem (ex: texto pede "olhos azuis", foto tem "olhos castanhos"). Isso deforma o rosto.
+* **Solução:** Um agente de IA intercepta o prompt do usuário *antes* da geração e **remove cirurgicamente** qualquer descrição genética (olhos, cabelo, pele), garantindo que a única fonte de verdade para o rosto seja a foto de referência.
+
+### 🛡️ 2. Identity Lock Protocol
+Uma "Hierarquia da Verdade" injetada no sistema:
+1.  **Imagem de Referência:** Autoridade absoluta sobre estrutura óssea e genética.
+2.  **Texto Sanitizado:** Autoridade sobre iluminação, roupa e cenário.
+
+### 🎨 3. Branding Mode (Suporte a Logos)
+Lógica dedicada para marcas. Ao selecionar "Logo":
+* A IA não busca traços faciais.
+* A logo é usada como **inspiração arquitetônica e de iluminação** (ex: transformar a logo em um letreiro neon cyberpunk ou integrá-la ao tecido de uma roupa).
+
+### 📸 4. Câmera 3D "Mobile First"
+* **Full Sensor Readout:** Acesso direto ao hardware da câmera sem cortes de resolução, evitando o efeito de "zoom" em celulares.
+* **Guia WYSIWYG:** Máscara visual com sombra que mostra exatamente a proporção 9:16 que será capturada.
+* **Saída 9:8:** Fusão inteligente de duas capturas verticais para criar uma textura de alta fidelidade para a IA.
 
 ## Tecnologias Utilizadas
-* **Ferramenta:** Canvas do Google Gemini (espaço de trabalho interativo e dinâmico que permite criar, editar e visualizar conteúdo em tempo real, com assistência de IA);
-* **Frontend:** HTML5, TailwindCSS (via CDN), Vanilla JS (ES6 Modules).
-* **AI Core:** Google Gemini API (`gemini-2.5-flash-image-preview`).
-* **Backend/Database:** Firebase Firestore (para armazenar a biblioteca de prompts e referências faciais).
-* **Auth:** Firebase Authentication (Anônima e Custom Tokens).
-* **Hardware Integration:** API `MediaDevices` do navegador para captura e processamento de textura facial em tempo real.
+* **Frontend:** HTML5, TailwindCSS, Vanilla JS.
+* **AI Orchestration:** Google Gemini API (`gemini-2.5-flash`).
+* **Backend:** Firebase Firestore & Auth.
+* **Hardware:** API `MediaDevices` com seleção de `facingMode`.
 
-### Screenshots do Ecossistema
+### Screenshots
 
-| Gerador de Identidade | Editor Integrado  | Captura 3D |
-|:---------------------:|:---------------------:|:----------:|
-| <img src="assets/gerador.png" style="max-height: 600px;"> | <img src="assets/editor.png" style="max-height: 600px;"> | <img src="assets/modelo3d.jpg" style="max-height: 600px;"> |
+| Gerador (Identity Lock) | Modo Branding (Logo) | Câmera 3D (Mobile) |
+|:-----------------------:|:--------------------:|:------------------:|
+| <img src="assets/gerador.png" style="max-height: 500px;"> | <img src="assets/logo_mode.png" style="max-height: 500px;"> | <img src="assets/camera_mobile.jpg" style="max-height: 500px;"> |
 
-> [!WARNING]
-> Por questões de segurança, cobri meu rosto na imagem gerada pela função de Camêra 3D.
+> [!NOTE]
+> A interface foi otimizada para remover proporções que causam alucinação (como 16:9 para retratos), focando em 1:1, 4:5 e 9:16.
 
-#### Outros Prints
+## Resultados: Natural ou Fake Natty?
 
-<img src="assets/1.png" style="width: 200px;"> <img src="assets/2.png" style="width: 200px;"> <img src="assets/3.png" style="width: 200px;">
+**Veredito: Fake Natty Indetectável.**
 
-## Engenharia por Trás do "Fake Natty"
+Com a implementação do **Genetic Firewall** na versão 3.9, eliminamos a principal causa de "estranheza" (Uncanny Valley): a deformação causada por prompts conflitantes. 
 
-O realismo extremo ("Natty") é alcançado através de um pipeline técnico complexo implementado em JavaScript puro:
-
-### 1. Captura e Fusão 3D (Photogrammetry-lite)
-O sistema possui um módulo de câmara que captura o rosto do utilizador em dois ângulos (frontal e perfil).
-* **Processamento:** O algoritmo recorta as imagens em proporção 9:16 e cria uma fusão ("stitch") das duas perspetivas numa única textura.
-* **Resultado:** Fornece ao modelo Gemini uma compreensão volumétrica do rosto, superior a uma simples foto 2D.
-  
-<img width="2876" height="2284" alt="01---Processamento-e-Fusão-3D-(Stitching)" src="https://github.com/user-attachments/assets/73e66018-7b34-45d4-8ecd-adf8329f2543" />
-
-### 2. "System Instructions" Dinâmicas
-O código injeta instruções de sistema diferentes baseadas no tipo de geração:
-* **Modo Humano:** Ativa o protocolo `MULTI-FACE IDENTITY TRANSFER`, forçando o modelo a ignorar a pose da referência e usar apenas a biometria facial.
-* **Modo Branding (Logo):** Ativa a lógica `ADVANCED LOGO ARTISTRY`, onde o logo não é colado, mas "cresce" organicamente a partir dos elementos da imagem (ex: néon, montanhas, arquitetura).
-
-![2---Gerador-de-Imagens-(Modo-Logo-_-Branding)](https://github.com/user-attachments/assets/debfeea2-9f40-46ad-87da-44dad3fce048)
-![3---Gerador-de-Imagens-(Modo-Humano-_-Identidade)](https://github.com/user-attachments/assets/30522f4d-a94d-434b-babf-72bf575dfed8)
-![4---Gerador-de-Imagens-(Restrições-e-Prompt-Negativo)](https://github.com/user-attachments/assets/5e16e010-4c30-4944-8aca-384b0be904ae)
-
-## Prompt Studio: O Ecossistema de Criação
-
-Para garantir a qualidade "Fake Natty", desenvolvi um módulo dedicado à **Engenharia de Prompt Assistida**, composto por agentes especializados:
-
-### 1. Vision Analyst (Engenharia Reversa de Imagens)
-Ao contrário de ferramentas comuns que apenas descrevem uma imagem, criei um agente que **extrai o estilo ignorando a identidade**.
-* **A Lógica:** O sistema utiliza uma instrução de sistema rígida (*"STRICTEST RULE: ABSOLUTELY NO FACIAL DESCRIPTIONS"*) para analisar pixel a pixel a iluminação, ângulo da câmara, tecido das roupas e cenário, mas bloqueia qualquer menção a olhos, cabelo ou idade.
-* **O Objetivo:** Permitir copiar o *estilo* de uma foto famosa sem que o rosto original interfira na clonagem da própria face.
-
-![6---Prompt-Studio-(Vision-Analyst---Análise-de-Imagem)](https://github.com/user-attachments/assets/7fdd0e28-d71c-481c-9c1f-a32058fd8cc7)
-
-
-### 2. Prompt Sanitizer (Corretor Inteligente)
-Um agente de texto que atua como "firewall" criativo.
-* **Função:** Recebe a ideia bruta do utilizador e reescreve-a, removendo automaticamente descrições físicas que geram conflito (como "olhos azuis" ou "cabelo louro"), garantindo que o modelo de geração use apenas a identidade injetada pelas fotos de referência.
-
-![7---Prompt-Studio-(Sanitizer---Refinamento-de-Texto)](https://github.com/user-attachments/assets/bd8d8042-4df9-4283-8849-84bbe0e87c21)
-
-
-### 3. Builder Paramétrico
-Uma interface "No-Code" para construção de prompts complexos.
-* **Controle Total:** Permite selecionar variáveis técnicas como *Camera Angle* (ex: Dutch Angle, Low Angle), *Lighting* (ex: Volumetric God Rays, Cyberpunk Neon) e *Film Stock*, sintetizando tudo num prompt estruturado profissionalmente.
-
-![8---Prompt-Studio-(Builder---Construtor)](https://github.com/user-attachments/assets/078e8b7e-1e4a-4099-94de-85a92a5238c4)
-
-### 4. Editor Integrado (Inpainting/Refinement)
-Módulo de pós-processamento que permite alterar elementos específicos da imagem gerada (ex: "Adcionar logo da Apple ao notebook, trocar a cor da gravata ou adicionar um relogio.") mantendo a consistência facial e a identidade original intactas.
-
-![5---Editor-de-Imagens-(Inpainting)](https://github.com/user-attachments/assets/5f90d181-47ad-4b23-962a-4bc30e630d6e)
-
-## Resultados
-
-**O Veredito:** Natural ou Fake Natty?
-
-**Fake Natty de Elite.**
-
-Ele gera imagens que são 100% sintéticas, mas a aplicação de **texturas de pele**, **iluminação baseada em física (PBR)** e a **preservação de identidade** tornam o resultado similar a uma fotografia para a maioria dos observadores, onde a distinção entre o real e o artificial é quase imperceptível.
-
-A ferramenta prova que o "Fake Natty" perfeito não vem apenas do modelo de IA, mas da **ferramenta que construímos ao redor dele** para controlar as alucinações.
-
-## Reflexão
-Criar este projeto revelou que o verdadeiro segredo do "Fake Natty" não está apenas na potência do modelo de IA, mas na **restrição do contexto**.
-
-O maior desafio não foi fazer a IA criar uma imagem bonita, mas sim **impedi-la de ser criativa demais** com o rosto do usuário. A conclusão é que, para obter resultados hiper-realistas e consistentes, precisamos construir ferramentas que atuem como "trilhos", guiando a alucinação da máquina para que ela respeite a geometria da realidade. O futuro não é apenas "promptar", é arquitetar sistemas que controlem a geração.
+Ao forçar a IA a ignorar descrições textuais sobre o rosto e focar exclusivamente na geometria da foto enviada, o resultado mantém a micro-expressão e a identidade da pessoa, enquanto a veste e ilumina de forma completamente sintética.
 
 ---
 ⌨️ Desenvolvido por Amaro Netto
-
-
-
-
-
-
