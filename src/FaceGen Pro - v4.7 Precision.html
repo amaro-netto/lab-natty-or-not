@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
+    <title>FaceGen Pro - Suite Criativa (v4.7 Precision)</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#8b5cf6', 600: '#7c3aed', 900: '#4c1d95' },
+                        dark: { 900: '#0f172a', 800: '#1e293b', 700: '#334155' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; }
+        
+        /* Scrollbar Personalizada */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        /* Animações */
+        .animate-in { animation: fade-in 0.3s ease-out forwards; }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Utilitários de Visibilidade */
+        .hidden-mode { display: none !important; }
+        
+        /* Botões de Switch */
+        .mode-active { background-color: #7c3aed; color: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); pointer-events: none; }
+        .mode-inactive { color: #94a3b8; background-color: transparent; border: 1px solid transparent; cursor: pointer; }
+        .mode-inactive:hover { color: white; border-color: #334155; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+
+        /* Estilo para Inputs de Cor e Range */
+        input[type="color"] {
+            -webkit-appearance: none; border: none; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; cursor: pointer;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; }
+        
+        input[type=range] {
+            -webkit-appearance: none; width: 100%; background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #8b5cf6; cursor: pointer; margin-top: -6px; box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #334155; border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col pb-10 overflow-x-hidden">
+
+    <!-- Toast e Modais -->
+    <div id="toast-container" class="fixed top-4 right-4 z-[100] flex flex-col items-end gap-2"></div>
+
+    <!-- Modal de Confirmação (Genérico) -->
+    <div id="modal-overlay" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl max-w-sm w-full p-6">
+            <h3 id="modal-title" class="text-lg font-semibold text-white mb-2">Confirmação</h3>
+            <p id="modal-message" class="text-slate-300 text-sm mb-6">Tem certeza?</p>
+            <div class="flex justify-end space-x-3">
+                <button id="modal-cancel-btn" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-700">Cancelar</button>
+                <button id="modal-confirm-btn" class="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-500 text-white">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mkt-prompt-modal" class="hidden fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in">
+        <div class="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-lg w-full p-6 relative flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="terminal" class="w-5 h-5 text-brand-500"></i> Prompt Usado</h3>
+                <button id="mkt-prompt-modal-close" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <textarea id="mkt-prompt-modal-text" readonly class="w-full h-48 bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs font-mono text-green-400 mb-4 resize-none focus:outline-none"></textarea>
+            <button id="mkt-prompt-modal-copy" class="w-full py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-bold transition-all">Copiar Prompt</button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-slate-900 border-b border-slate-800 p-3 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <div class="bg-indigo-600 p-1.5 rounded-lg shadow-lg"><i data-lucide="scan-face" class="text-white w-5 h-5"></i></div>
+                <h1 class="text-lg font-bold text-white tracking-tight hidden sm:block">FaceGen <span class="text-indigo-500">Pro</span> <span class="text-white text-xs">v4.7</span></h1>
+            </div>
+             <a href="https://prompt-ia-xi.vercel.app/" target="_blank" class="hidden md:flex items-center gap-2 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-all bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20 hover:bg-emerald-500/20 group">
+                <i data-lucide="external-link" class="w-3 h-3 group-hover:scale-110 transition-transform"></i>Prompts Otimizados Aqui</a>
+
+            <div class="items-right bg-slate-950 p-1 rounded-lg border border-slate-800 flex">
+                <button id="btn-switch-personal" class="mode-active px-4 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2">
+                    <i data-lucide="user" class="w-3 h-3"></i> Pessoal
+                </button>
+                <button id="btn-switch-marketing" class="mode-inactive px-4 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2">
+                    <i data-lucide="shopping-bag" class="w-3 h-3"></i> Publicidade
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- WRAPPER PESSOAL -->
+    <div id="wrapper-personal" class="w-full flex-1 flex flex-col relative animate-in">
+        
+        <div class="bg-slate-900/50 border-b border-slate-800 py-2">
+            <div class="max-w-4xl mx-auto flex justify-center space-x-2">
+                <button id="tab-btn-generator" class="px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center text-indigo-400 border-b-2 border-indigo-500 bg-indigo-500/10">
+                    <i data-lucide="wand-2" class="w-4 h-4 mr-2"></i> Gerador
+                </button>
+                <button id="tab-btn-editor" class="px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center text-slate-400 hover:text-slate-200">
+                    <i data-lucide="palette" class="w-4 h-4 mr-2"></i> Editor
+                </button>
+                <button id="tab-btn-prompt" class="px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center text-slate-400 hover:text-slate-200">
+                    <i data-lucide="type" class="w-4 h-4 mr-2"></i> Prompt Studio
+                </button>
+            </div>
+        </div>
+
+        <!-- View: Generator -->
+        <main id="view-generator" class="flex-1 max-w-4xl mx-auto w-full p-4 space-y-8">
+            <section class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-white">Referência Facial</h2>
+                    <span class="text-xs text-slate-500">Selecione 1 ou 2 rostos</span>
+                </div>
+                <div class="bg-slate-800/30 rounded-2xl p-4 border border-slate-700/50 relative">
+                    <div class="flex items-center gap-4 overflow-x-auto pb-2 pt-1 px-1">
+                        <div id="upload-area" class="min-w-[100px] w-[100px] h-24 border-2 border-dashed border-slate-600 rounded-xl hover:border-indigo-500 hover:bg-slate-800 transition-all group flex-shrink-0 cursor-pointer relative">
+                            <input type="file" id="upload-input" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 group-hover:text-indigo-400 transition-colors">
+                                <i data-lucide="plus" class="w-6 h-6 mb-1"></i><span class="text-[10px] font-medium uppercase tracking-wider">Novo</span>
+                            </div>
+                        </div>
+
+                        <button id="btn-open-3d-camera" class="ml-2 min-w-[100px] w-[100px] h-24 border-2 border-dashed border-slate-600 rounded-xl hover:border-pink-500 hover:bg-slate-800 transition-all group flex flex-col items-center justify-center cursor-pointer relative flex-shrink-0" title="Criar Foto 3D">
+                            <div class="flex flex-col items-center justify-center text-slate-400 group-hover:text-pink-400 transition-colors">
+                                <i data-lucide="camera" class="w-6 h-6 mb-1"></i>
+                                <span class="text-[10px] font-medium uppercase tracking-wider">Foto 3D</span>
+                            </div>
+                        </button>
+
+                        <div class="w-px h-12 bg-slate-700 flex-shrink-0 mx-1"></div>
+                        <div id="face-grid" class="flex gap-4 items-center"><div class="text-xs text-slate-500 animate-pulse">Carregando...</div></div>
+                    </div>
+                    <div id="action-panel" class="hidden mt-3 border-t border-slate-700/50 pt-3"></div>
+                </div>
+            </section>
+
+            <section class="space-y-6">
+                <div class="space-y-3">
+                    <h2 class="text-lg font-semibold text-white">Descrição da Cena</h2>
+                    <div class="relative group">
+                        <textarea id="prompt-input" rows="3" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl p-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 outline-none resize-none transition-all shadow-inner" placeholder="Ex: Um casal caminhando na praia ao pôr do sol, cinematográfico..."></textarea>
+                        <div class="absolute bottom-3 right-3"><i data-lucide="pen-tool" class="w-4 h-4 text-slate-600"></i></div>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <h2 class="text-lg font-semibold text-white">Proporção</h2>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button class="ratio-btn group flex items-center justify-center p-3 rounded-xl border-2 border-indigo-500 bg-indigo-500/10 transition-all space-x-2" data-ratio="1:1"><span class="text-xs font-medium text-white">1:1</span></button>
+                        <button class="ratio-btn group flex items-center justify-center p-3 rounded-xl border-2 border-gray-700 bg-gray-800 hover:bg-slate-700 transition-all space-x-2" data-ratio="4:5"><span class="text-xs font-medium text-white">4:5</span></button>
+                        <button class="ratio-btn group flex items-center justify-center p-3 rounded-xl border-2 border-gray-700 bg-gray-800 hover:bg-slate-700 transition-all space-x-2" data-ratio="9:16"><span class="text-xs font-medium text-white">9:16</span></button>
+                    </div>
+                </div>
+                <button id="generate-btn" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold py-4 rounded-xl transition-all shadow-xl shadow-indigo-500/20 text-lg tracking-wide mt-4 border border-white/10 flex items-center justify-center">
+                    <i data-lucide="wand-2" class="mr-2 w-6 h-6"></i>Gerar Imagem
+                </button>
+            </section>
+
+            <section class="space-y-3">
+                <div class="bg-black/60 rounded-2xl p-2 border border-slate-800 flex flex-col items-center justify-center min-h-[300px] relative shadow-2xl">
+                    <div id="result-placeholder" class="text-center p-8 opacity-60">
+                        <div class="bg-slate-800/50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700"><i data-lucide="image" class="text-slate-500 w-8 h-8"></i></div>
+                        <p class="text-slate-500 text-sm">Resultado aqui.</p>
+                    </div>
+                    <div id="loading-spinner" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 rounded-2xl backdrop-blur-sm">
+                        <div class="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mb-4"></div><span class="text-indigo-200 font-medium animate-pulse">Criando...</span>
+                    </div>
+                    <div class="relative w-full max-w-2xl flex items-center justify-center overflow-hidden rounded-lg">
+                        <img id="result-image" class="w-full h-full object-cover hidden" alt="Resultado">
+                    </div>
+                    <div class="flex flex-wrap justify-center gap-3 mt-4 mb-2 w-full">
+                        <button id="download-btn" class="hidden flex items-center px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-full text-sm font-bold transition-colors shadow-lg cursor-pointer"><i data-lucide="download" class="w-4 h-4 mr-2"></i>Original (HQ)</button>
+                        <button id="download-webp-btn" class="hidden flex items-center px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full text-sm font-bold transition-colors shadow-lg cursor-pointer"><i data-lucide="file-code" class="w-4 h-4 mr-2"></i>Baixar WebP</button>
+                        <button id="send-to-editor-btn" class="hidden flex items-center px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white rounded-full text-sm font-bold transition-colors shadow-lg cursor-pointer border border-violet-400/30"><i data-lucide="palette" class="w-4 h-4 mr-2"></i>🎨 Editar Imagem</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- View: Editor -->
+        <main id="view-editor" class="hidden flex-1 max-w-4xl mx-auto w-full p-4 space-y-8">
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div class="space-y-3">
+                    <h2 class="text-lg font-semibold text-white">Imagem Original</h2>
+                    <div class="bg-slate-800/30 rounded-2xl p-2 border border-slate-700/50 relative min-h-[250px] flex items-center justify-center overflow-hidden">
+                        <div id="editor-placeholder" class="text-center p-8 opacity-60 flex flex-col items-center">
+                            <p class="text-slate-500 text-sm">Gere uma imagem primeiro e envie para cá.</p>
+                        </div>
+                        <img id="editor-preview-image" class="hidden w-full h-auto max-h-[400px] object-contain rounded-xl">
+                    </div>
+                </div>
+                <div class="space-y-3 flex flex-col">
+                    <h2 class="text-lg font-semibold text-white">Instruções de Edição</h2>
+                    <textarea id="editor-prompt-input" rows="6" class="w-full h-full bg-slate-900/80 border border-slate-700 rounded-xl p-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 outline-none resize-none transition-all shadow-inner" placeholder="Descreva as mudanças..."></textarea>
+                    <button id="editor-generate-btn" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold py-4 rounded-xl transition-all border border-white/10 flex items-center justify-center">
+                        <i data-lucide="wand-2" class="mr-2 w-6 h-6"></i>Aplicar Edição
+                    </button>
+                </div>
+            </section>
+            <section id="editor-result-container" class="space-y-3 hidden">
+                <h2 class="text-lg font-semibold text-white">Resultado da Edição</h2>
+                <div class="bg-black/60 rounded-2xl p-2 border border-slate-800 flex flex-col items-center justify-center min-h-[300px] relative shadow-2xl">
+                    <div id="editor-loading-spinner" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 rounded-2xl backdrop-blur-sm">
+                        <span class="text-indigo-200 font-medium animate-pulse">Editando...</span>
+                    </div>
+                    <img id="editor-result-image" class="w-full h-full object-contain hidden">
+                    <div class="flex flex-wrap justify-center gap-3 mt-4 mb-2 w-full">
+                        <button id="editor-download-btn" class="hidden flex items-center px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-full text-sm font-bold transition-colors shadow-lg cursor-pointer">Baixar (HQ)</button>
+                        <button id="editor-download-webp-btn" class="hidden flex items-center px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full text-sm font-bold transition-colors shadow-lg cursor-pointer">Baixar WebP</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- View: Prompt Studio -->
+        <main id="view-prompt" class="hidden flex-1 max-w-3xl mx-auto w-full p-4 space-y-8">
+            <div class="bg-indigo-900/20 border border-indigo-900/50 rounded-xl p-4 flex items-start space-x-3">
+                <i data-lucide="info" class="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5"></i>
+                <p class="text-sm text-indigo-200 leading-relaxed">Ferramenta especializada para criar prompts otimizados.</p>
+            </div>
+            <section class="bg-slate-800/30 rounded-2xl p-6 border border-slate-700">
+                <div class="grid grid-cols-3 gap-2 mb-6 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                    <button id="ps-mode-image" class="flex items-center justify-center py-2 rounded-lg text-sm font-medium transition-all bg-indigo-600 text-white border border-indigo-500 shadow-lg"><i data-lucide="image-plus" class="w-4 h-4 mr-2"></i>Da Imagem</button>
+                    <button id="ps-mode-text" class="flex items-center justify-center py-2 rounded-lg text-sm font-medium transition-all bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200"><i data-lucide="edit-3" class="w-4 h-4 mr-2"></i>Do Texto</button>
+                    <button id="ps-mode-builder" class="flex items-center justify-center py-2 rounded-lg text-sm font-medium transition-all bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200"><i data-lucide="hammer" class="w-4 h-4 mr-2"></i>Construtor</button>
+                </div>
+
+                <div id="ps-input-container-image" class="space-y-4">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Faça upload de uma referência de estilo</label>
+                    <div class="relative w-full h-64 border-2 border-dashed border-slate-600 rounded-xl bg-slate-900/50 hover:bg-slate-800 transition-colors group overflow-hidden flex items-center justify-center">
+                        <input type="file" id="ps-upload-input" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                        <div id="ps-upload-placeholder" class="flex flex-col items-center justify-center text-slate-500 group-hover:text-indigo-400 transition-colors"><i data-lucide="upload-cloud" class="w-10 h-10 mb-2"></i><span class="text-sm">Arraste ou clique para enviar</span></div>
+                        <img id="ps-upload-preview" class="hidden w-full h-full object-contain" alt="Preview">
+                    </div>
+                </div>
+
+                <div id="ps-input-container-text" class="space-y-4 hidden">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Digite seu prompt bruto</label>
+                    <textarea id="ps-text-input" rows="6" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Ex: Homem de terno azul andando em nova york..."></textarea>
+                </div>
+
+                <div id="ps-input-container-builder" class="hidden space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="block text-xs font-medium text-slate-400 mb-1">Sujeito/Pessoa</label><select id="builder-subject" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm"><option value="">Selecione...</option><option value="Casal">Casal</option><option value="Mulher">Mulher</option><option value="Homem">Homem</option><option value="Criança">Criança</option><option value="Modelo">Modelo</option><option value="Ciborgue">Ciborgue</option></select></div>
+                        <div><label class="block text-xs font-medium text-slate-400 mb-1">Ângulo</label><select id="builder-angle" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm"><option value="">Livre</option><option value="Eye-level">Nível dos olhos</option><option value="Low angle looking up">De baixo (Imponente)</option><option value="High angle looking down">De cima</option><option value="Close-up portrait">Close-up</option></select></div>
+                    </div>
+                    <div><label class="block text-xs font-medium text-slate-400 mb-1">Roupa</label><input type="text" id="builder-clothing" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm" placeholder="Ex: Terno cinza..."></div>
+                    <div><label class="block text-xs font-medium text-slate-400 mb-1">Cenário</label><input type="text" id="builder-scenery" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm" placeholder="Ex: Rua movimentada..."></div>
+                    <div><label class="block text-xs font-medium text-slate-400 mb-1">Posição</label><input type="text" id="builder-pose" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm" placeholder="Ex: Sentado..."></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="block text-xs font-medium text-slate-400 mb-1">Luz</label><select id="builder-lighting" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm"><option value="">Natural</option><option value="Golden Hour">Golden Hour</option><option value="Cinematic Lighting">Cinematográfica</option><option value="Studio Lighting">Estúdio</option></select></div>
+                        <div><label class="block text-xs font-medium text-slate-400 mb-1">Estilo</label><select id="builder-style" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm"><option value="Photorealistic">Fotorealista</option><option value="Cinematic">Cinematográfico</option><option value="Cyberpunk">Cyberpunk</option><option value="3D Render">3D Render</option></select></div>
+                    </div>
+                </div>
+
+                <button id="ps-generate-btn" class="w-full mt-6 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center border border-slate-600">
+                    <i data-lucide="sparkles" class="mr-2 w-5 h-5"></i> Gerar Prompt Otimizado
+                </button>
+            </section>
+
+            <section class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <label class="text-sm font-medium text-slate-400">Resultado (Inglês)</label>
+                    <div id="ps-loading" class="hidden flex items-center text-indigo-400 text-xs animate-pulse">
+                        <i data-lucide="loader" class="w-3 h-3 mr-1 animate-spin"></i> Pensando (Safety Fix Applied)...
+                    </div>
+                </div>
+                <div class="relative">
+                    <textarea id="ps-output" readonly rows="8" class="w-full bg-black/50 border border-slate-800 rounded-xl p-4 text-indigo-100 font-mono text-sm focus:ring-1 focus:ring-indigo-500 outline-none resize-none" placeholder="O prompt aparecerá aqui..."></textarea>
+                    <button id="ps-copy-btn" class="absolute top-2 right-2 p-2 bg-slate-800 hover:bg-indigo-600 text-white rounded-lg transition-colors border border-slate-700"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- WRAPPER MARKETING (MODIFICADO) -->
+    <div id="wrapper-marketing" class="w-full flex-1 hidden-mode max-w-7xl mx-auto p-4 animate-in">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+            
+            <div class="lg:col-span-5 space-y-6">
+                <!-- Grid de Uploads -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="aspect-square bg-slate-800 rounded-2xl border-2 border-dashed border-brand-500/50 hover:border-brand-500 relative group cursor-pointer overflow-hidden transition-all">
+                        <input type="file" id="mkt-upload-face" accept="image/*" class="absolute inset-0 opacity-0 z-10 cursor-pointer">
+                        <img id="mkt-preview-face" class="absolute inset-0 w-full h-full object-cover hidden z-0">
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+                            <div class="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center mb-2 text-brand-500"><i data-lucide="user" class="w-4 h-4"></i></div>
+                            <span class="text-[10px] font-bold text-brand-300 uppercase">Rosto</span>
+                        </div>
+                    </div>
+                    <div class="aspect-square bg-slate-800 rounded-2xl border-2 border-dashed border-pink-500/50 hover:border-pink-500 relative group cursor-pointer overflow-hidden transition-all">
+                        <input type="file" id="mkt-upload-product" accept="image/*" class="absolute inset-0 opacity-0 z-10 cursor-pointer">
+                        <img id="mkt-preview-product" class="absolute inset-0 w-full h-full object-cover hidden z-0">
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+                            <div class="w-8 h-8 rounded-full bg-pink-500/20 flex items-center justify-center mb-2 text-pink-400"><i data-lucide="shopping-bag" class="w-4 h-4"></i></div>
+                            <span class="text-[10px] font-bold text-pink-300 uppercase">Produto</span>
+                        </div>
+                    </div>
+                    <div class="aspect-square bg-slate-800 rounded-2xl border-2 border-dashed border-blue-500/50 hover:border-blue-500 relative group cursor-pointer overflow-hidden transition-all">
+                        <input type="file" id="mkt-upload-scenario" accept="image/*" class="absolute inset-0 opacity-0 z-10 cursor-pointer">
+                        <img id="mkt-preview-scenario" class="absolute inset-0 w-full h-full object-cover hidden z-0">
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+                            <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center mb-2 text-blue-400"><i data-lucide="image" class="w-4 h-4"></i></div>
+                            <span class="text-[10px] font-bold text-blue-300 uppercase">Ref</span>
+                        </div>
+                    </div>
+                    <!-- NOVO: Logo Upload -->
+                    <div class="aspect-square bg-slate-800 rounded-2xl border-2 border-dashed border-amber-500/50 hover:border-amber-500 relative group cursor-pointer overflow-hidden transition-all">
+                        <input type="file" id="mkt-upload-logo" accept="image/*" class="absolute inset-0 opacity-0 z-10 cursor-pointer">
+                        <img id="mkt-preview-logo" class="absolute inset-0 w-full h-full object-contain p-4 hidden z-0 bg-slate-900/50">
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+                            <div class="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center mb-2 text-amber-400"><i data-lucide="hexagon" class="w-4 h-4"></i></div>
+                            <span class="text-[10px] font-bold text-amber-300 uppercase">Logo</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- NOVO: Campo de Orientações -->
+                <div>
+                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Orientações (Opcional)</label>
+                     <textarea id="mkt-guidelines" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:ring-1 focus:ring-brand-500 outline-none resize-none" placeholder="Ex: Focar no sorriso, iluminação dramática, estilo futurista..."></textarea>
+                </div>
+
+                <!-- 1. Configuração da Marca -->
+                <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><i data-lucide="palette" class="w-3 h-3"></i> 1. Configuração da Marca</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="flex items-center gap-2 bg-slate-900 p-2 rounded-lg border border-slate-700">
+                            <input type="color" id="mkt-color-primary" value="#8b5cf6">
+                            <span class="text-xs text-slate-300">Primária</span>
+                        </div>
+                        <div class="flex items-center gap-2 bg-slate-900 p-2 rounded-lg border border-slate-700">
+                            <input type="color" id="mkt-color-secondary" value="#334155">
+                            <span class="text-xs text-slate-300">Secundária</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[10px] text-slate-500 mb-1 block">Fonte Título</label>
+                            <select id="mkt-font-title" class="w-full bg-slate-900 border border-slate-700 text-xs text-white rounded-lg p-2">
+                                <option value="Inter">Inter (Padrão)</option>
+                                <option value="Montserrat">Montserrat</option>
+                                <option value="Playfair Display">Playfair Display</option>
+                                <option value="Roboto">Roboto</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-500 mb-1 block">Fonte Corpo</label>
+                            <select id="mkt-font-body" class="w-full bg-slate-900 border border-slate-700 text-xs text-white rounded-lg p-2">
+                                <option value="Inter">Inter (Padrão)</option>
+                                <option value="Lato">Lato</option>
+                                <option value="Open Sans">Open Sans</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Conteúdo do Anúncio -->
+                <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><i data-lucide="type" class="w-3 h-3"></i> 2. Conteúdo do Anúncio</h4>
+                    <input type="text" id="mkt-main-title" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white placeholder-slate-500" placeholder="Título Principal (Ex: Promoção de Verão)">
+                    <textarea id="mkt-support-text" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white placeholder-slate-500 resize-none" placeholder="Texto de Apoio..."></textarea>
+                </div>
+
+                <!-- 3. Mídia e Fundo -->
+                <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
+                     <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><i data-lucide="layers" class="w-3 h-3"></i> 3. Mídia e Fundo</h4>
+                     <div>
+                        <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">Escurecimento (Overlay)</span><span id="val-overlay" class="text-xs text-brand-400 font-bold">20%</span></div>
+                        <input type="range" id="mkt-overlay" min="0" max="80" value="20" oninput="document.getElementById('val-overlay').innerText = this.value + '%'">
+                     </div>
+                     <div>
+                        <div class="flex justify-between mb-1"><span class="text-xs text-slate-400">Desfoque</span><span id="val-blur" class="text-xs text-brand-400 font-bold">Baixo</span></div>
+                        <input type="range" id="mkt-blur" min="0" max="3" value="0" step="1" oninput="const v=['Nenhum','Baixo','Médio','Alto']; document.getElementById('val-blur').innerText = v[this.value]">
+                     </div>
+                </div>
+
+                <!-- 4. Estilo do Layout -->
+                 <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 space-y-3">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><i data-lucide="layout" class="w-3 h-3"></i> 4. Estilo do Layout</h4>
+                    <div class="grid grid-cols-3 gap-2" id="mkt-layout-options">
+                        <!-- Botões gerados via JS -->
+                    </div>
+                </div>
+                
+                <button id="mkt-btn-generate" class="w-full py-4 bg-gradient-to-r from-brand-600 to-brand-500 rounded-xl text-white font-bold shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i> Gerar Campanha (4 Fotos)
+                </button>
+            </div>
+
+            <div class="lg:col-span-7 bg-slate-900 rounded-3xl border border-slate-800 p-6 flex flex-col h-full min-h-[700px]">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="images" class="text-brand-500"></i> Galeria Gerada</h3>
+                    <div id="mkt-progress-container" class="hidden flex items-center gap-3">
+                        <span id="mkt-progress-text" class="text-[10px] text-brand-400 font-bold animate-pulse">Iniciando...</span>
+                        <div class="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div id="mkt-progress-bar" class="h-full bg-brand-500 w-0 transition-all duration-300"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="mkt-gallery-grid" class="grid grid-cols-2 gap-4 content-start flex-1 overflow-y-auto custom-scrollbar">
+                    <div class="col-span-2 aspect-[16/9] bg-slate-900/50 rounded-2xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center text-slate-500 p-4 text-center">
+                        <i data-lucide="arrow-left" class="w-8 h-8 mb-3 opacity-40"></i>
+                        <span class="text-sm font-medium">Configure seu ensaio ao lado</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Camera Modal -->
+    <div id="camera-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl max-w-sm w-full h-[90vh] p-4 flex flex-col items-center relative">
+            <div class="w-full flex justify-between items-center mb-4 shrink-0">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <div class="bg-indigo-500/20 p-2 rounded-lg"><i data-lucide="scan-face" class="text-indigo-400 w-5 h-5"></i></div>
+                    Captura 3D
+                </h3>
+                <button id="btn-camera-close-x" class="text-slate-400 hover:text-white transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div class="relative w-full aspect-[9/16] bg-black rounded-2xl overflow-hidden border-2 border-slate-700 shadow-inner group grow flex items-center justify-center">
+                <video id="camera-feed" class="absolute w-full h-full object-cover transform scale-x-[-1]" autoplay playsinline muted></video>
+                <canvas id="camera-canvas" class="hidden"></canvas>
+                <div class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-10 overflow-hidden rounded-2xl">
+                    <div id="camera-guide-box" class="border-2 border-dashed border-indigo-500 box-content shadow-[0_0_0_9999px_rgba(0,0,0,0.85)] transition-all duration-500 aspect-[9/16] h-full max-h-full"></div>
+                    <div class="absolute bottom-8 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 z-20">
+                        <span id="camera-instruction" class="text-white font-medium flex items-center gap-2 text-sm">
+                            <i data-lucide="camera" class="w-4 h-4 animate-pulse text-red-500"></i> Aguardando...
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-4 w-full justify-center mt-4 shrink-0 pb-4">
+                <button id="btn-camera-capture" disabled class="w-full py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center transform active:scale-95 text-lg">
+                    <i data-lucide="aperture" class="w-6 h-6 mr-2"></i> <span id="btn-camera-text">Iniciar Câmera</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-slate-950 border-t border-slate-800 py-10 mt-auto w-full">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-8 md:gap-4">
+            
+            <div class="flex items-center justify-center md:justify-start w-full md:w-auto">
+                <img src="https://raw.githubusercontent.com/amaro-netto/amaro-netto/cef78ca062bc64fd029f2395c7098c84573b9fb2/logos/amaronetto%20solucoes/SVG/Tech%20Logo%20Horizontal%20Black%20c%C3%B3pia.svg" 
+                     alt="Amaro Netto Soluções" 
+                     class="h-10 w-auto brightness-0 invert opacity-80 hover:opacity-100 transition-opacity">
+            </div>
+
+            <div class="text-slate-500 text-xs text-center font-medium">
+                &copy; 2025 FaceGen Pro. <br class="sm:hidden">Todos os direitos reservados.
+            </div>
+
+            <div class="flex items-center justify-center gap-5 w-full md:w-auto">
+                <a href="https://github.com/amaro-netto" target="_blank" title="GitHub" class="text-slate-400 hover:text-white transition-colors transform hover:scale-110">
+                    <i data-lucide="github" class="w-5 h-5"></i>
+                </a>
+                <a href="https://www.linkedin.com/in/amarosilvanetto/" target="_blank" title="LinkedIn" class="text-slate-400 hover:text-blue-500 transition-colors transform hover:scale-110">
+                    <i data-lucide="linkedin" class="w-5 h-5"></i>
+                </a>
+                <a href="https://www.instagram.com/ti.amaronetto" target="_blank" title="Instagram" class="text-slate-400 hover:text-pink-500 transition-colors transform hover:scale-110">
+                    <i data-lucide="instagram" class="w-5 h-5"></i>
+                </a>
+                <a href="https://www.facebook.com/profile.php?id=61578435551178" target="_blank" title="Facebook" class="text-slate-400 hover:text-blue-600 transition-colors transform hover:scale-110">
+                    <i data-lucide="facebook" class="w-5 h-5"></i>
+                </a>
+                <a href="https://amaronetto.vercel.app/" target="_blank" title="Site Oficial" class="text-slate-400 hover:text-emerald-400 transition-colors transform hover:scale-110">
+                    <i data-lucide="globe" class="w-5 h-5"></i>
+                </a>
+                <a href="mailto:ti.amaronetto@gmail.com" title="E-mail" class="text-slate-400 hover:text-red-400 transition-colors transform hover:scale-110">
+                    <i data-lucide="mail" class="w-5 h-5"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, deleteDoc, query, onSnapshot, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ==========================================
+        // CONFIGURAÇÃO DA "MENTE" DA IA (EDITÁVEL)
+        // ==========================================
+        const apiKey = ""; // Será injetada pelo ambiente
+        const AI_CONFIG = {
+            apiKey: apiKey, 
+            textModel: "gemini-2.5-flash-preview-09-2025",
+            visionModel: "gemini-2.5-flash-preview-09-2025",
+            imageModel: "gemini-2.5-flash-image-preview", // Usado para edição e referência
+        };
+
+        const AI_BRAIN = {
+            // 1. O "Firewall"
+            sanitizer: {
+                systemPrompt: `CRITICAL TASK: You are a PROMPT FILTER.
+                INPUT: A user description for an image generation.
+                OBJECTIVE: REMOVE ALL REFERENCES to physical genetics (Eyes, Hair, Skin, Age, Ethnicity) because the physical identity is provided by a reference image.
+                RULES:
+                1. DELETE specific eye colors, hair colors, skin tones.
+                2. KEEP makeup, clothing, scene, lighting.
+                3. Output ONLY the sanitized prompt.`
+            },
+            
+            // 2. O Gerador Principal
+            generator: {
+                logoSystem: `[SYSTEM: LOGO ARTISTRY] Keep logo shape/text. Blend into scene perfectly.`,
+                faceSystem: `[SYSTEM: GENETIC LOCK] Reference Image 1 is SOURCE OF TRUTH. Do NOT change eyes, hair, skin. Only change clothes/bg to match the scene.`,
+            },
+            
+            // 3. O Editor de Imagens
+            editor: {
+                prefix: `EDIT INSTRUCTION: `
+            },
+
+            // 4. O Prompt Studio - ATUALIZADO COM MODOS ESPECÍFICOS
+            promptStudio: {
+                modes: {
+                    image: `Role: Expert Computer Vision Analyst, Visual Art Critic & Creative Writer.
+
+                            CRITICAL MISSION:
+                            Perform a PIXEL-PERFECT analysis of the uploaded image to generate a hyper-detailed, Midjourney-style prompt. You must capture both the PHYSICAL REALITY (textures, fit, angle) and the ARTISTIC ESSENCE (mood, lighting, composition).
+
+                            🚫 STRICTEST RULE: 
+                            ABSOLUTELY NO FACIAL DESCRIPTIONS IN THE TEXT.
+                            Do not mention eyes, nose, mouth, hair color, skin tone, or age in the description. 
+                            If you see a face, ignore it completely. Focus ONLY on the body from the neck down and the environment.
+
+                            DETAILED ANALYSIS PROTOCOL (Be Meticulous):
+
+                            1. CAMERA, ANGLE & CINEMATOGRAPHY (Critical Priority):
+                            - Identify the exact camera angle (e.g., "low-angle worm's-eye view", "high-angle bird's-eye view", "eye-level").
+                            - Detect lens characteristics (e.g., "wide-angle distortion", "telephoto compression", "Dutch angle tilt").
+                            - Define the cinematic style (e.g., "editorial fashion photography", "cinematic film still", "candid snapshot").
+
+                            2. LIGHTING, MOOD & ATMOSPHERE (Artistic Style):
+                            - Analyze light direction and quality (e.g., "soft diffused window light", "harsh noon shadows", "volumetric god rays").
+                            - Describe the color palette and temperature (e.g., "cool teal and orange grading", "monochromatic noir", "vibrant pastel tones").
+                            - Capture the emotional mood (e.g., "melancholic", "energetic", "serene").
+
+                            3. CLOTHING & TEXTURES (Deep Dive):
+                            - Identify specific fabrics (e.g., "ribbed knit wool", "distressed denim", "sheer silk").
+                            - Describe fits and cuts (e.g., "oversized drop-shoulder", "slim-fit tapered").
+                            - Note micro-details (e.g., "silver zipper teeth", "frayed hem", "subtle stitching").
+                            - Use precise color descriptive terms (e.g., "deep crimson with shadow gradients" instead of "red").
+
+                            4. POSE & ANATOMY (Non-Facial):
+                            - Describe exact body mechanics (e.g., "weight shifted to left hip", "arms crossed with tension").
+                            - Note hand placement and finger articulation if visible.
+
+                            5. BACKGROUND & DEPTH:
+                            - Describe the setting with depth keywords (e.g., "bokeh city lights", "textured concrete wall").
+                            - Identify props or architectural styles that contribute to the composition.
+
+                            FINAL OUTPUT FORMAT (Strictly English):
+                            Start exactly with: (photo uploaded also preserve face details accurately 100%)
+                            [Specific Camera Angle, Lens & Cinematic Style]
+                            [Ultra-Detailed Clothing & Texture Description]
+                            [Precise Pose & Body Mechanics]
+                            [Meticulous Environment, Lighting, Color Palette & Mood]
+                            [Technical Specs: Lens mm, Aperture, Film Stock]
+                            End exactly with: I authorize the use of my image.`,
+                            
+                    text: `Role: Elite AI Prompt Architect & Visual Sanitizer.
+
+                            CRITICAL MISSION: 
+                            You must take the user's raw, simple idea and transform it into a HIGH-END VISUAL MASTERPIECE, while simultaneously sanitizing it for a perfect face-swap workflow.
+
+                            PHASE 1: SANITIZATION (Strict Exclusion Protocol)
+                            🚫 ABSOLUTELY NO FACIAL DESCRIPTIONS.
+                            - You must STRIP away any mention of eyes, nose, mouth, hair color/style, skin tone, or age.
+                            - If the user types "blonde woman smiling", you convert it to "woman".
+                            - Focus the description purely from the neck down.
+
+                            PHASE 2: AESTHETIC ELEVATION (The "Expensive" Look)
+                            - Expand the remaining description with premium keywords.
+                            - Add Lighting: (e.g., "volumetric lighting", "cinematic rim light", "golden hour", "soft studio box").
+                            - Add Texture & Quality: (e.g., "8k resolution", "unreal engine 5 render", "highly detailed fabric textures", "photorealistic").
+                            - Add Camera Mechanics: (e.g., "low angle", "depth of field", "bokeh background").
+
+                            FINAL OUTPUT FORMAT (Strictly English):
+                            Start exactly with: (photo uploaded also preserve face details accurately 100%)
+                            [Enhanced Body & Outfit Description - High Fashion/Detailed]
+                            [Meticulous Environment & Lighting Description - Cinematic/Atmospheric]
+                            [Technical Specs: Camera, Lens, Quality Tags]
+                            End exactly with: I authorize the use of my image.`,
+                           
+                    builder: `Role: Expert Prompt Engineer & Narrative Scene Director.
+
+                            MISSION: 
+                            You will receive a set of structured form fields (e.g., Subject, Clothing, Location, Lighting, Camera). Your task is to WEAVE these disconnected inputs into a single, cohesive, and linguistically fluid paragraph.
+
+                            🚫 CRITICAL CONSTRAINT (The "Neck-Down" Rule):
+                            - While weaving the narrative, you must ACTIVELY STRIP away any facial descriptions found in the inputs.
+                            - If the input says "Smiling blonde woman", you convert it to "A female figure standing confidently".
+                            - Focus strictly on the outfit, the body language, the environment, and the lighting.
+
+                            NARRATIVE GUIDELINES:
+                            1. NO ROBOTIC LISTS: Do not output "Subject: Woman, Light: Sun". 
+                            2. BE FLUID: Use connecting words to create a natural flow. 
+                            - Bad: "Wearing a suit. Standing in a park. Sun is shining."
+                            - Good: "A sophisticated silhouette dressed in a tailored suit, standing amidst a lush park bathed in the warm glow of afternoon sun."
+                            3. ENRICHMENT: If a field is vague, use your expertise to add context-appropriate adjectives (e.g., if "Night", add "ambient shadows").
+
+                            FINAL OUTPUT FORMAT (Strictly English):
+                            Start exactly with: (photo uploaded also preserve face details accurately 100%)
+                            [Insert the cohesive, fluid narrative description here, combining all form fields into a seamless text without facial details]
+                            End exactly with: I authorize the use of my image.`
+                },
+                safety: [
+                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                ]
+            },
+
+            // 5. O Diretor de Marketing (Campanha) - ATUALIZADO
+            marketing: {
+                role: `ROLE: High-End Commercial Photographer & Creative Art Director.
+                    TASK: Shoot a cinematic advertising campaign image. 
+                    GOAL: Seamless integration of subject, product, and brand identity into a photorealistic scene.
+                    
+                    BRAND ATMOSPHERE & COLOR GRADING:
+                    - Primary Tone: Use {{COLOR_PRI}} as the dominant environmental light or set design accent.
+                    - Secondary Accent: Use {{COLOR_SEC}} for rim lighting, props, or subtle details.
+                    - Typography Vibe: Ensure the composition leaves 'negative space' suitable for {{FONT_TITLE}} style typography.
+                    
+                    PHOTOGRAPHIC COMPOSITION (The Organic Look):
+                    1. SUBJECT (Ref 1): Capture the subject with natural skin textures and realistic subsurface scattering. 
+                    Avoid the "cut-out" look. The subject must interact with the environment's light.
+                    2. PRODUCT PLACEMENT (Ref 2): The product is the "Hero". It must share the exact same lighting direction and color temperature as the subject. 
+                    Depth of field should naturally draw the eye to the product.
+                    3. LOGO INTEGRATION (Ref 4): 
+                    [OPTION A - Organic]: Emboss the logo on a wall, glass, or surface within the scene.
+                    [OPTION B - Clean Layout]: Compose the shot with a dedicated empty area (Negative Space) for the logo overlay.
+                    4. LIGHTING & CONTRAST (Replaces Overlay): 
+                    Instead of a flat digital overlay, use "Chiaroscuro" lighting. Create deep, natural shadows (approx {{OVERLAY}}% density) in the negative space area to ensure text readability is organic, not artificial.
+                    5. DEPTH & FOCUS: Apply a {{BLUR}} aperture setting (f/1.8 to f/2.8) to separate the subject from the background softly.
+                    6. TEXT HANDLING: If placing text "{{TITLE}}", make it look like part of the magazine spread or a cinematic subtitle, not a sticker.
+                    
+                    USER GUIDELINES: {{GUIDELINES}}
+                    
+                    SCENARIO CONSTRUCTION: 
+                    Based on Reference Image 3. The environment must cast reflections onto the product and subject. 
+                    Style: {{LAYOUT_STYLE}} (Ensure the camera angle matches this layout intent).
+                `
+            }
+        };
+
+        // ==========================================
+        // INFRAESTRUTURA
+        // ==========================================
+
+        // Configuração Firebase
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app';
+
+        // Estado Global
+        let currentUser = null;
+        let focusedFaceId = null;
+        let focusedFaceData = null;
+        let selectedFaces = []; 
+        let selectedRatio = '1:1';
+        let currentGeneratedImageBase64 = null; 
+        
+        // Estado Editor
+        let editorSourceImageBase64 = null;
+        let currentEditedImageBase64 = null; 
+        
+        // Estado Prompt Studio
+        let promptInputMode = 'image';
+        let promptAnalysisImage = null; 
+
+        // Camera 3D
+        let cameraStream = null;
+        let cameraStep = 0; 
+        let capturedImages = { front: null, side: null };
+
+        // Marketing Mode
+        let mktFaceImage = null;
+        let mktProductImage = null;
+        let mktSceneImage = null;
+        let mktLogoImage = null; 
+        let mktGalleryData = [];
+        let mktLayoutStyle = 'Minimalista';
+
+        // DOM Elements
+        const viewGenerator = document.getElementById('view-generator');
+        const viewEditor = document.getElementById('view-editor');
+        const viewPrompt = document.getElementById('view-prompt');
+        const toastContainer = document.getElementById('toast-container');
+
+        // Modal Elements
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+
+        // Utils
+        window.showToast = (message, type = 'error') => {
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+            toast.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 mb-3 animate-in`;
+            toast.innerHTML = `<span class="text-sm font-medium">${message}</span>`;
+            toastContainer.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        };
+
+        function downloadBlob(blob, filename) {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        function dataURLtoBlob(dataurl) {
+            var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+                bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+            while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+            return new Blob([u8arr], {type:mime});
+        }
+
+        const resizeImage = (file, maxWidth = 800) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const scaleSize = maxWidth / img.width;
+                        canvas.width = maxWidth;
+                        canvas.height = img.height * scaleSize;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.8));
+                    };
+                };
+            });
+        };
+        
+        const delay = ms => new Promise(r => setTimeout(r, ms));
+
+        // --- AUTH FLOW ---
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        };
+        initAuth();
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) { 
+                currentUser = user; 
+                loadFaces(); 
+                initMarketingMode(); 
+            }
+        });
+
+        // --- UI SWITCHING LOGIC ---
+        const btnSwitchPersonal = document.getElementById('btn-switch-personal');
+        const btnSwitchMarketing = document.getElementById('btn-switch-marketing');
+        const wrapperPersonal = document.getElementById('wrapper-personal');
+        const wrapperMarketing = document.getElementById('wrapper-marketing');
+
+        btnSwitchPersonal.onclick = () => {
+            wrapperPersonal.classList.remove('hidden-mode');
+            wrapperMarketing.classList.add('hidden-mode');
+            btnSwitchPersonal.classList.replace('mode-inactive', 'mode-active');
+            btnSwitchMarketing.classList.replace('mode-active', 'mode-inactive');
+        };
+        btnSwitchMarketing.onclick = () => {
+            wrapperMarketing.classList.remove('hidden-mode');
+            wrapperPersonal.classList.add('hidden-mode');
+            btnSwitchMarketing.classList.replace('mode-inactive', 'mode-active');
+            btnSwitchPersonal.classList.replace('mode-active', 'mode-inactive');
+        };
+
+        // --- PERSONAL MODE LOGIC ---
+        const tabGeneratorBtn = document.getElementById('tab-btn-generator');
+        const tabEditorBtn = document.getElementById('tab-btn-editor'); 
+        const tabPromptBtn = document.getElementById('tab-btn-prompt');
+
+        function switchTab(tab) {
+            [tabGeneratorBtn, tabEditorBtn, tabPromptBtn].forEach(btn => {
+                btn.className = 'px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center text-slate-400 hover:text-slate-200';
+            });
+            [viewGenerator, viewEditor, viewPrompt].forEach(view => view.classList.add('hidden'));
+
+            const activeClass = 'px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center text-indigo-400 border-b-2 border-indigo-500 bg-indigo-500/10';
+
+            if (tab === 'generator') {
+                tabGeneratorBtn.className = activeClass;
+                viewGenerator.classList.remove('hidden');
+            } else if (tab === 'editor') {
+                tabEditorBtn.className = activeClass;
+                viewEditor.classList.remove('hidden');
+            } else if (tab === 'prompt') {
+                tabPromptBtn.className = activeClass;
+                viewPrompt.classList.remove('hidden');
+            }
+        }
+        tabGeneratorBtn.onclick = () => switchTab('generator');
+        tabEditorBtn.onclick = () => switchTab('editor');
+        tabPromptBtn.onclick = () => switchTab('prompt');
+
+        // Face Management
+        const faceGrid = document.getElementById('face-grid');
+        const actionPanel = document.getElementById('action-panel');
+        
+        function loadFaces() {
+            if (!currentUser) return;
+            const q = query(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'face_references'));
+            onSnapshot(q, (snapshot) => {
+                faceGrid.innerHTML = '';
+                const currentIds = new Set(snapshot.docs.map(d => d.id));
+                selectedFaces = selectedFaces.filter(f => currentIds.has(f.id));
+                updateActionPanel();
+
+                if (snapshot.empty) {
+                    faceGrid.innerHTML = `<div class="text-xs text-slate-500">Comece aqui -></div>`;
+                    return;
+                }
+                snapshot.forEach((doc) => {
+                    const id = doc.id;
+                    const face = doc.data();
+                    const isFocused = id === focusedFaceId;
+                    const selection = selectedFaces.find(f => f.id === id);
+                    
+                    const div = document.createElement('div');
+                    let classes = "relative group cursor-pointer rounded-xl overflow-hidden border-2 transition-all duration-200 min-w-[100px] w-[100px] h-24 flex-shrink-0 ";
+                    
+                    if (isFocused) classes += "border-blue-500 shadow-lg shadow-blue-500/20 ring-2 ring-blue-500/20 ";
+                    else if (selection) {
+                         if(selection.label === 'Homem') classes += "border-blue-400 opacity-100 ";
+                         else if(selection.label === 'Mulher') classes += "border-pink-400 opacity-100 ";
+                         else classes += "border-amber-400 opacity-100 ";
+                    } else classes += "border-slate-700 hover:border-slate-500 ";
+
+                    div.className = classes;
+                    div.onclick = () => { focusedFaceId = id; focusedFaceData = face.image; loadFaces(); updateActionPanel(); };
+                    
+                    div.innerHTML = `<img src="${face.image}" class="w-full h-full object-cover bg-slate-800">`;
+                    if (selection) {
+                        const badgeColor = selection.label === 'Homem' ? 'bg-blue-500' : selection.label === 'Mulher' ? 'bg-pink-500' : 'bg-amber-500';
+                        div.innerHTML += `<div class="absolute inset-0 flex items-center justify-center bg-black/20"><div class="${badgeColor} text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-sm">${selection.label[0]}</div></div>`;
+                    }
+                    faceGrid.appendChild(div);
+                });
+                lucide.createIcons();
+            });
+        }
+
+        function updateActionPanel() {
+            if (!focusedFaceId) { actionPanel.classList.add('hidden'); return; }
+            actionPanel.classList.remove('hidden');
+            const selection = selectedFaces.find(f => f.id === focusedFaceId);
+            
+            let content = `<div class="flex justify-between items-center bg-slate-800 p-2 rounded-xl border border-slate-700">`;
+            content += `<button onclick="window.deleteFace()" class="text-red-400 hover:text-red-300 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
+            
+            if (selection) {
+                content += `<button onclick="window.removeSelection('${focusedFaceId}')" class="bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg font-medium">Remover da Seleção</button>`;
+            } else {
+                content += `<div class="flex gap-2">
+                    <button onclick="window.addSelection('${focusedFaceId}', 'Homem')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium">Homem</button>
+                    <button onclick="window.addSelection('${focusedFaceId}', 'Mulher')" class="bg-pink-600 hover:bg-pink-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium">Mulher</button>
+                    <button onclick="window.addSelection('${focusedFaceId}', 'Logo')" class="bg-amber-600 hover:bg-amber-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium">Logo</button>
+                </div>`;
+            }
+            content += `</div>`;
+            actionPanel.innerHTML = content;
+            lucide.createIcons();
+        }
+
+        window.addSelection = (id, label) => {
+            selectedFaces = selectedFaces.filter(f => f.id !== id);
+            selectedFaces.push({ id: id, data: focusedFaceData, label: label });
+            loadFaces(); updateActionPanel();
+        };
+        window.removeSelection = (id) => {
+            selectedFaces = selectedFaces.filter(f => f.id !== id);
+            loadFaces(); updateActionPanel();
+        };
+
+        window.deleteFace = () => {
+            if (!focusedFaceId) return;
+            modalMessage.innerText = "Excluir esta referência facial?";
+            modalOverlay.classList.remove('hidden');
+            
+            modalConfirmBtn.onclick = async () => {
+                modalOverlay.classList.add('hidden');
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'face_references', focusedFaceId));
+                    focusedFaceId = null;
+                } catch(e) { showToast("Erro ao apagar"); }
+            };
+            modalCancelBtn.onclick = () => modalOverlay.classList.add('hidden');
+        };
+
+        const uploadInput = document.getElementById('upload-input');
+        uploadInput.addEventListener('change', async (e) => {
+            if (e.target.files[0]) {
+                try {
+                    const base64 = await resizeImage(e.target.files[0], 800);
+                    await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'face_references'), { image: base64, timestamp: serverTimestamp() });
+                    showToast("Foto salva!", "success");
+                } catch(e) { showToast("Erro no upload"); }
+                uploadInput.value = '';
+            }
+        });
+
+        // --- MAIN GENERATION LOGIC ---
+        const generateBtn = document.getElementById('generate-btn');
+        const promptInput = document.getElementById('prompt-input');
+        const resultImage = document.getElementById('result-image');
+        const resultPlaceholder = document.getElementById('result-placeholder');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const downloadBtn = document.getElementById('download-btn');
+        const sendToEditorBtn = document.getElementById('send-to-editor-btn');
+
+        generateBtn.addEventListener('click', async () => {
+            if (selectedFaces.length === 0) return showToast("Selecione um Rosto ou Logo.", "error");
+            if (!promptInput.value.trim()) return showToast("Digite uma descrição.");
+            
+            generateBtn.disabled = true;
+            resultImage.classList.add('hidden'); resultPlaceholder.classList.add('hidden'); loadingSpinner.classList.remove('hidden');
+            
+            try {
+                let finalPrompt = promptInput.value;
+                const hasLogo = selectedFaces.some(f => f.label === 'Logo');
+
+                // 1. Sanitização
+                if (!hasLogo) {
+                    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${AI_CONFIG.textModel}:generateContent?key=${AI_CONFIG.apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: AI_BRAIN.sanitizer.systemPrompt + `\nINPUT: "${finalPrompt}"` }] }] })
+                    });
+                    const json = await resp.json();
+                    if (json.candidates?.[0]?.content?.parts?.[0]?.text) {
+                        finalPrompt = json.candidates[0].content.parts[0].text;
+                    }
+                }
+
+                // 2. Construção do Prompt
+                let systemInstruction = hasLogo ? AI_BRAIN.generator.logoSystem : AI_BRAIN.generator.faceSystem;
+                const fullPrompt = `${systemInstruction}\n[SCENE]: ${finalPrompt}\nAspect Ratio: ${selectedRatio}`;
+                
+                const parts = [{ text: fullPrompt }];
+                selectedFaces.forEach(f => parts.push({ inlineData: { mimeType: "image/jpeg", data: f.data.split(',')[1] } }));
+
+                // 3. Geração
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${AI_CONFIG.imageModel}:generateContent?key=${AI_CONFIG.apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts }],
+                        generationConfig: { responseModalities: ["IMAGE"], temperature: 0.55 }
+                    })
+                });
+
+                const rJson = await res.json();
+                const img = rJson.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+
+                if (img) {
+                    currentGeneratedImageBase64 = `data:${img.inlineData.mimeType};base64,${img.inlineData.data}`;
+                    resultImage.src = currentGeneratedImageBase64;
+                    resultImage.classList.remove('hidden');
+                    
+                    const container = resultImage.parentElement;
+                    container.className = `relative w-full bg-black rounded-lg flex items-center justify-center overflow-hidden border border-gray-700 shadow-2xl ${selectedRatio === '1:1' ? 'aspect-square' : selectedRatio === '4:5' ? 'aspect-[4/5]' : 'aspect-[9/16]'}`;
+                    
+                    downloadBtn.classList.remove('hidden');
+                    document.getElementById('download-webp-btn').classList.remove('hidden');
+                    sendToEditorBtn.classList.remove('hidden');
+                } else {
+                    throw new Error("Geração falhou (Bloqueio ou Erro API)");
+                }
+
+            } catch (e) {
+                console.error(e);
+                showToast("Erro: " + e.message);
+            } finally {
+                generateBtn.disabled = false;
+                loadingSpinner.classList.add('hidden');
+            }
+        });
+
+        // Ratio Buttons
+        const ratioButtons = document.querySelectorAll('.ratio-btn');
+        ratioButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                ratioButtons.forEach(b => b.className = 'ratio-btn group flex items-center justify-center p-3 rounded-xl border-2 border-gray-700 bg-gray-800 hover:bg-slate-700 transition-all space-x-2');
+                btn.className = 'ratio-btn group flex items-center justify-center p-3 rounded-xl border-2 border-indigo-500 bg-indigo-500/10 transition-all space-x-2';
+                selectedRatio = btn.dataset.ratio;
+            });
+        });
+
+        downloadBtn.onclick = () => { if(currentGeneratedImageBase64) downloadBlob(dataURLtoBlob(currentGeneratedImageBase64), `gen-${Date.now()}.png`); };
+        
+        document.getElementById('download-webp-btn').onclick = () => {
+            if (!currentGeneratedImageBase64) return;
+            const img = new Image();
+            img.onload = () => {
+                const c = document.createElement('canvas'); c.width=img.width; c.height=img.height;
+                c.getContext('2d').drawImage(img,0,0);
+                c.toBlob(b => downloadBlob(b, `gen-${Date.now()}.webp`), 'image/webp', 0.9);
+            };
+            img.src = currentGeneratedImageBase64;
+        };
+
+        // --- EDITOR LOGIC ---
+        const editorPreviewImage = document.getElementById('editor-preview-image');
+        const editorPlaceholder = document.getElementById('editor-placeholder');
+        const editorGenerateBtn = document.getElementById('editor-generate-btn');
+        const editorPromptInput = document.getElementById('editor-prompt-input');
+        const editorResultImage = document.getElementById('editor-result-image');
+        const editorResultContainer = document.getElementById('editor-result-container');
+        const editorLoadingSpinner = document.getElementById('editor-loading-spinner');
+
+        sendToEditorBtn.onclick = () => {
+            editorSourceImageBase64 = currentGeneratedImageBase64;
+            editorPreviewImage.src = editorSourceImageBase64;
+            editorPreviewImage.classList.remove('hidden');
+            editorPlaceholder.classList.add('hidden');
+            switchTab('editor');
+        };
+
+        document.getElementById('editor-download-btn').onclick = () => {
+            if(currentEditedImageBase64) downloadBlob(dataURLtoBlob(currentEditedImageBase64), `edit-${Date.now()}.png`);
+        };
+        document.getElementById('editor-download-webp-btn').onclick = () => {
+            if(!currentEditedImageBase64) return;
+            const img = new Image();
+            img.onload = () => {
+                const c = document.createElement('canvas'); c.width=img.width; c.height=img.height;
+                c.getContext('2d').drawImage(img,0,0);
+                c.toBlob(b => downloadBlob(b, `edit-${Date.now()}.webp`), 'image/webp', 0.9);
+            };
+            img.src = currentEditedImageBase64;
+        };
+
+        editorGenerateBtn.onclick = async () => {
+            if (!editorSourceImageBase64 || !editorPromptInput.value) return showToast("Falta imagem ou instrução.");
+            
+            const originalBtnText = editorGenerateBtn.innerHTML;
+            editorGenerateBtn.disabled = true;
+            editorGenerateBtn.innerHTML = '<i data-lucide="loader-2" class="animate-spin mr-2 w-6 h-6"></i> Editando...';
+            
+            editorLoadingSpinner.classList.remove('hidden');
+            editorResultImage.classList.add('hidden');
+            
+            try {
+                const parts = [
+                    { text: `${AI_BRAIN.editor.prefix}${editorPromptInput.value}` },
+                    { inlineData: { mimeType: "image/jpeg", data: editorSourceImageBase64.split(',')[1] } }
+                ];
+                
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${AI_CONFIG.imageModel}:generateContent?key=${AI_CONFIG.apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts }], generationConfig: { responseModalities: ["IMAGE"] } })
+                });
+                const json = await res.json();
+                const img = json.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+                
+                if (img) {
+                    currentEditedImageBase64 = `data:${img.inlineData.mimeType};base64,${img.inlineData.data}`;
+                    editorResultImage.src = currentEditedImageBase64;
+                    editorResultImage.classList.remove('hidden');
+                    editorResultContainer.classList.remove('hidden');
+                    document.getElementById('editor-download-btn').classList.remove('hidden');
+                    document.getElementById('editor-download-webp-btn').classList.remove('hidden');
+                    
+                    editorGenerateBtn.innerHTML = '<i data-lucide="check" class="mr-2 w-6 h-6"></i> Concluído';
+                    setTimeout(() => editorGenerateBtn.innerHTML = originalBtnText, 3000);
+                } else {
+                    editorGenerateBtn.innerHTML = originalBtnText;
+                }
+            } catch (e) { 
+                showToast("Erro edição: " + e.message);
+                editorGenerateBtn.innerHTML = originalBtnText;
+            }
+            finally { 
+                editorGenerateBtn.disabled = false; 
+                editorLoadingSpinner.classList.add('hidden'); 
+                lucide.createIcons();
+            }
+        };
+
+        // --- PROMPT STUDIO ---
+        const psGenerateBtn = document.getElementById('ps-generate-btn');
+        const psOutput = document.getElementById('ps-output');
+        const psLoading = document.getElementById('ps-loading');
+
+        psGenerateBtn.onclick = async () => {
+            psGenerateBtn.disabled = true;
+            psLoading.classList.remove('hidden');
+            
+            try {
+                // MODIFICADO: Seleciona a instrução específica do modo atual
+                let instruction = AI_BRAIN.promptStudio.modes[promptInputMode];
+                
+                let userInput = "";
+                let imagePart = null;
+
+                if (promptInputMode === 'image') {
+                    if (!promptAnalysisImage) throw new Error("Sem imagem.");
+                    userInput = "Analyze this image style.";
+                    imagePart = { inlineData: { mimeType: "image/jpeg", data: promptAnalysisImage.split(',')[1] } };
+                } else if (promptInputMode === 'text') {
+                    userInput = document.getElementById('ps-text-input').value;
+                } else {
+                    userInput = `Subject: ${document.getElementById('builder-subject').value}, Style: ${document.getElementById('builder-style').value}`;
+                }
+
+                const parts = [{ text: instruction + "\nInput: " + userInput }];
+                if (imagePart) parts.push(imagePart);
+
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${AI_CONFIG.visionModel}:generateContent?key=${AI_CONFIG.apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts }],
+                        safetySettings: AI_BRAIN.promptStudio.safety
+                    })
+                });
+                
+                const json = await res.json();
+                if (json.promptFeedback?.blockReason) throw new Error("Blocked: " + json.promptFeedback.blockReason);
+                
+                psOutput.value = json.candidates?.[0]?.content?.parts?.[0]?.text || "Erro na resposta.";
+
+            } catch(e) { showToast("Erro PS: " + e.message); }
+            finally { psGenerateBtn.disabled = false; psLoading.classList.add('hidden'); }
+        };
+
+        document.getElementById('ps-copy-btn').onclick = () => {
+            const text = psOutput.value;
+            if(!text) return;
+            psOutput.select();
+            document.execCommand('copy');
+            showToast("Prompt copiado!", "success");
+        };
+
+        // --- MARKETING MODE LOGIC ---
+        function initMarketingMode() {
+            const layoutOptions = ['Minimalista', 'Bold', 'Corporativo'];
+            const container = document.getElementById('mkt-layout-options');
+            
+            const renderLayoutOptions = () => {
+                container.innerHTML = '';
+                layoutOptions.forEach(item => {
+                    const btn = document.createElement('button');
+                    btn.innerText = item;
+                    const isActive = (item === mktLayoutStyle);
+                    btn.className = `py-2 px-2 rounded-lg text-[10px] border transition-all ${isActive ? 'bg-brand-600 text-white border-transparent' : 'bg-slate-800 text-slate-400 border-slate-700'}`;
+                    btn.onclick = () => {
+                        mktLayoutStyle = item;
+                        renderLayoutOptions();
+                    };
+                    container.appendChild(btn);
+                });
+            };
+            
+            renderLayoutOptions();
+
+            // Handlers para Uploads
+            const handleUpload = async (file, imgId, type) => {
+                if(file) {
+                    const b64 = await resizeImage(file);
+                    const imgEl = document.getElementById(imgId);
+                    imgEl.src = b64;
+                    imgEl.classList.remove('hidden');
+                    return b64;
+                }
+                return null;
+            };
+
+            document.getElementById('mkt-upload-face').onchange = async (e) => mktFaceImage = await handleUpload(e.target.files[0], 'mkt-preview-face');
+            document.getElementById('mkt-upload-product').onchange = async (e) => mktProductImage = await handleUpload(e.target.files[0], 'mkt-preview-product');
+            document.getElementById('mkt-upload-scenario').onchange = async (e) => mktSceneImage = await handleUpload(e.target.files[0], 'mkt-preview-scenario');
+            document.getElementById('mkt-upload-logo').onchange = async (e) => mktLogoImage = await handleUpload(e.target.files[0], 'mkt-preview-logo');
+
+            document.getElementById('mkt-btn-generate').onclick = async () => {
+                if(!mktFaceImage || !mktProductImage) return showToast("Face e Produto são obrigatórios!", "error");
+                
+                const btn = document.getElementById('mkt-btn-generate');
+                btn.disabled = true;
+                document.getElementById('mkt-gallery-grid').innerHTML = '';
+                document.getElementById('mkt-progress-container').classList.remove('hidden');
+                
+                // Coleta de Valores do Formulário
+                const colorPri = document.getElementById('mkt-color-primary').value;
+                const colorSec = document.getElementById('mkt-color-secondary').value;
+                const fontTitle = document.getElementById('mkt-font-title').value;
+                const fontBody = document.getElementById('mkt-font-body').value;
+                const mainTitle = document.getElementById('mkt-main-title').value || "Título Padrão";
+                const overlay = document.getElementById('mkt-overlay').value;
+                const blurVal = ['Nenhum','Baixo','Médio','Alto'][document.getElementById('mkt-blur').value];
+                const guidelines = document.getElementById('mkt-guidelines').value || "Nenhuma";
+
+                const variations = [
+                     { desc: "Anuncio de foco no produto", layout: mktLayoutStyle },
+                     { desc: "Foto estilo lifestyle com texto integrado", layout: mktLayoutStyle },
+                     { desc: "Close-up artistico", layout: mktLayoutStyle },
+                     { desc: "Composição criativa e abstrata", layout: mktLayoutStyle }
+                ];
+
+                for(let i = 0; i < 4; i++) {
+                    document.getElementById('mkt-progress-text').innerText = `Gerando Design ${i+1}/4...`;
+                    document.getElementById('mkt-progress-bar').style.width = `${((i+1)/4)*100}%`;
+
+                    try {
+                        let systemPrompt = AI_BRAIN.marketing.role
+                            .replace('{{COLOR_PRI}}', colorPri)
+                            .replace('{{COLOR_SEC}}', colorSec)
+                            .replace('{{FONT_TITLE}}', fontTitle)
+                            .replace('{{FONT_BODY}}', fontBody)
+                            .replace('{{LAYOUT_STYLE}}', mktLayoutStyle)
+                            .replace('{{OVERLAY}}', overlay)
+                            .replace('{{BLUR}}', blurVal)
+                            .replace('{{TITLE}}', mainTitle)
+                            .replace('{{GUIDELINES}}', guidelines + ". Variation: " + variations[i].desc);
+
+                        const parts = [
+                            { text: systemPrompt },
+                            { inlineData: { mimeType: "image/jpeg", data: mktFaceImage.split(',')[1] } },
+                            { inlineData: { mimeType: "image/jpeg", data: mktProductImage.split(',')[1] } }
+                        ];
+                        if(mktSceneImage) {
+                            parts.push({ inlineData: { mimeType: "image/jpeg", data: mktSceneImage.split(',')[1] } });
+                        }
+                        if(mktLogoImage) {
+                            parts.push({ inlineData: { mimeType: "image/jpeg", data: mktLogoImage.split(',')[1] } });
+                        }
+
+                        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${AI_CONFIG.imageModel}:generateContent?key=${AI_CONFIG.apiKey}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                contents: [{ parts }],
+                                safetySettings: AI_BRAIN.promptStudio.safety,
+                                generationConfig: { responseModalities: ["IMAGE"], temperature: 0.6 }
+                            })
+                        });
+
+                        const json = await res.json();
+                        const img = json.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+
+                        if(img) {
+                            const url = `data:${img.inlineData.mimeType};base64,${img.inlineData.data}`;
+                            const id = Date.now() + i;
+                            
+                            mktGalleryData.push({ id, url, prompt: systemPrompt });
+
+                            const div = document.createElement('div');
+                            div.className = "bg-slate-800 rounded-xl overflow-hidden border border-slate-700 mb-4 animate-in shadow-lg";
+                            div.innerHTML = `
+                                <div class="relative aspect-[4/5]"><img src="${url}" class="w-full h-full object-cover"></div>
+                                <div class="p-2 flex justify-between bg-slate-900">
+                                    <button onclick="window.openMktPrompt(${id})" class="text-slate-400 hover:text-white"><i data-lucide="info"></i></button>
+                                    <button onclick="window.downloadMktImage(${id})" class="text-brand-500 hover:text-brand-400"><i data-lucide="download"></i></button>
+                                </div>
+                            `;
+                            document.getElementById('mkt-gallery-grid').prepend(div);
+                            lucide.createIcons();
+                        }
+
+                    } catch(e) { console.error(e); }
+                    
+                    if(i < 3) await delay(2000); 
+                }
+
+                btn.disabled = false;
+                document.getElementById('mkt-progress-container').classList.add('hidden');
+            };
+        }
+
+        window.openMktPrompt = (id) => {
+            const item = mktGalleryData.find(x => x.id === id);
+            if(item) {
+                document.getElementById('mkt-prompt-modal-text').value = item.prompt;
+                document.getElementById('mkt-prompt-modal').classList.remove('hidden');
+            }
+        };
+        window.downloadMktImage = (id) => {
+            const item = mktGalleryData.find(x => x.id === id);
+            if(item) downloadBlob(dataURLtoBlob(item.url), `mkt-${id}.png`);
+        };
+        document.getElementById('mkt-prompt-modal-close').onclick = () => document.getElementById('mkt-prompt-modal').classList.add('hidden');
+        document.getElementById('mkt-prompt-modal-copy').onclick = () => {
+            document.getElementById('mkt-prompt-modal-text').select();
+            document.execCommand('copy');
+            showToast("Prompt copiado!", "success");
+        };
+
+        // --- CAMERA 3D ---
+        const btnOpen3dCamera = document.getElementById('btn-open-3d-camera');
+        const cameraModal = document.getElementById('camera-modal');
+        const btnCameraCloseX = document.getElementById('btn-camera-close-x');
+        const videoFeed = document.getElementById('camera-feed');
+        const cameraCanvas = document.getElementById('camera-canvas');
+        const btnCameraCapture = document.getElementById('btn-camera-capture');
+        const btnCameraText = document.getElementById('btn-camera-text');
+        const cameraGuideBox = document.getElementById('camera-guide-box');
+
+        btnOpen3dCamera.onclick = () => { cameraModal.classList.remove('hidden'); cameraStep = 0; updateCameraUI(); };
+        btnCameraCloseX.onclick = () => { 
+            if(cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+            cameraStream = null;
+            videoFeed.srcObject = null;
+            cameraModal.classList.add('hidden');
+        };
+
+        function updateCameraUI() {
+            btnCameraCapture.disabled = false;
+            btnCameraCapture.className = `w-full py-4 rounded-xl text-white font-bold transition-all shadow-lg flex items-center justify-center ${cameraStep === 2 ? 'bg-pink-600' : 'bg-indigo-600'}`;
+            
+            if (cameraStep === 0) {
+                btnCameraText.innerText = "Iniciar";
+                cameraGuideBox.classList.add('hidden');
+            } else if (cameraStep === 1) {
+                btnCameraText.innerText = "Capturar FRENTE";
+                cameraGuideBox.classList.remove('hidden');
+            } else if (cameraStep === 2) {
+                btnCameraText.innerText = "Capturar PERFIL";
+                cameraGuideBox.classList.remove('hidden');
+            }
+        }
+
+        btnCameraCapture.onclick = async () => {
+            if (cameraStep === 0) {
+                try {
+                    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+                    videoFeed.srcObject = cameraStream;
+                    cameraStep = 1; updateCameraUI();
+                } catch(e) { showToast("Erro Câmera"); }
+            } else if (cameraStep === 1) {
+                captureFrame('front'); cameraStep = 2; updateCameraUI();
+            } else if (cameraStep === 2) {
+                captureFrame('side');
+                btnCameraCapture.disabled = true; btnCameraText.innerText = "Processando...";
+                
+                const imgFront = new Image(); imgFront.src = capturedImages.front;
+                const imgSide = new Image(); imgSide.src = capturedImages.side;
+                
+                await new Promise(r => imgSide.onload = r);
+
+                const finalCanvas = document.createElement('canvas');
+                finalCanvas.width = imgFront.width + imgSide.width;
+                finalCanvas.height = imgFront.height;
+                const ctx = finalCanvas.getContext('2d');
+                ctx.drawImage(imgFront, 0, 0);
+                ctx.drawImage(imgSide, imgFront.width, 0);
+
+                const finalB64 = finalCanvas.toDataURL('image/jpeg', 0.9);
+                await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'face_references'), { 
+                    image: finalB64, timestamp: serverTimestamp(), type: '3d_mobile', ratio: '9:8' 
+                });
+                showToast("3D Salvo!", "success");
+                btnCameraCloseX.click();
+            }
+        };
+
+        function captureFrame(type) {
+            const v = videoFeed;
+            const w = v.videoWidth; const h = v.videoHeight;
+            const captureWidth = h * (9/16);
+            const sourceX = (w - captureWidth) / 2;
+            
+            cameraCanvas.width = captureWidth; cameraCanvas.height = h;
+            const ctx = cameraCanvas.getContext('2d');
+            
+            ctx.save(); ctx.translate(captureWidth, 0); ctx.scale(-1, 1);
+            ctx.drawImage(v, w - sourceX - captureWidth, 0, captureWidth, h, 0, 0, captureWidth, h);
+            ctx.restore();
+            
+            capturedImages[type] = cameraCanvas.toDataURL('image/jpeg', 0.9);
+        }
+
+        // Init UI
+        switchTab('generator');
+        
+        const psModeImageBtn = document.getElementById('ps-mode-image');
+        const psModeTextBtn = document.getElementById('ps-mode-text');
+        const psModeBuilderBtn = document.getElementById('ps-mode-builder');
+        const psInputContainerImage = document.getElementById('ps-input-container-image');
+        const psInputContainerText = document.getElementById('ps-input-container-text');
+        const psInputContainerBuilder = document.getElementById('ps-input-container-builder');
+
+        function switchPs(mode) {
+            promptInputMode = mode;
+            [psModeImageBtn, psModeTextBtn, psModeBuilderBtn].forEach(b => b.className = 'flex items-center justify-center py-2 rounded-lg text-sm font-medium transition-all bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200');
+            [psInputContainerImage, psInputContainerText, psInputContainerBuilder].forEach(c => c.classList.add('hidden'));
+            
+            if(mode==='image') { psModeImageBtn.className = 'flex items-center justify-center py-2 rounded-lg text-sm font-medium transition-all bg-indigo-600 text-white border border-indigo-500 shadow-lg'; psInputContainerImage.classList.remove('hidden'); }
+            if(mode==='text') { psModeTextBtn.className = 'flex items-center justify-center py-2 rounded-lg text-sm font-medium transition-all bg-indigo-600 text-white border border-indigo-500 shadow-lg'; psInputContainerText.classList.remove('hidden'); }
+            if(mode==='builder') { psModeBuilderBtn.className = 'flex items-center justify-center py-2 rounded-lg text-sm font-medium transition-all bg-indigo-600 text-white border border-indigo-500 shadow-lg'; psInputContainerBuilder.classList.remove('hidden'); }
+        }
+        psModeImageBtn.onclick = () => switchPs('image');
+        psModeTextBtn.onclick = () => switchPs('text');
+        psModeBuilderBtn.onclick = () => switchPs('builder');
+        switchPs('image');
+        
+        const psUploadInput = document.getElementById('ps-upload-input');
+        psUploadInput.onchange = async (e) => {
+            if(e.target.files[0]) {
+                promptAnalysisImage = await resizeImage(e.target.files[0]);
+                document.getElementById('ps-upload-preview').src = promptAnalysisImage;
+                document.getElementById('ps-upload-preview').classList.remove('hidden');
+                document.getElementById('ps-upload-placeholder').classList.add('hidden');
+            }
+        };
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
