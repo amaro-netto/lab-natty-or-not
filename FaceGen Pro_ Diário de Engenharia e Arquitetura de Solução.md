@@ -2,7 +2,7 @@
 
 **Autor:** Amaro Amarante da Silva Netto  
 **Stack:** JavaScript (Vanilla), Tailwind CSS, Firebase, Google Gemini 2.5 Flash.  
-**Versão Atual:** v3.9 Identity Lock
+**Versão Atual:** v4.7 Precision
 
 ## **1\. Introdução: A Tese do Produto**
 
@@ -46,7 +46,7 @@ O mercado está saturado de geradores de imagem "text-to-image". No entanto, ide
 1. A *System Instruction* muda de "Transferência Facial" para "Integração Artística".
 2. A IA é instruída a usar as cores e formas da logo como **matéria-prima** para o cenário (ex: luzes neon, arquitetura), em vez de tentar "colar" a imagem.
 
-### **Fase 6: O "Genetic Firewall" e a Hierarquia da Verdade (v3.9)**
+### **Fase 6: O "Genetic Firewall" e a Hierarquia da Verdade**
 
 **O Desafio Crítico:** Mesmo com instruções, se o usuário digitasse "Olhos verdes" e a foto tivesse olhos castanhos, a IA deformava a estrutura óssea do rosto tentando resolver o conflito impossível.
 
@@ -55,6 +55,24 @@ O mercado está saturado de geradores de imagem "text-to-image". No entanto, ide
 2.  **Negative Prompt Dinâmico:** O sistema injeta automaticamente termos como `wrong eye color` e `face morphing` nos parâmetros negativos.
 3.  **Hierarquia de Verdade:** A instrução final para o gerador impõe que a **Imagem de Referência é a autoridade absoluta** sobre a estrutura facial, enquanto o **Texto (Sanitizado)** governa apenas o estilo.
 
+### **Fase 7: O Dilema da Composição (Dípticos) e a Lógica de Casais (v4.7)**
+
+**O Problema (Alucinação Estrutural):** Ao utilizar referências profissionais compostas (ex: rosto de frente e perfil lado a lado na mesma imagem) ou fotos de casais, o modelo multimodal interpretava o *layout* da imagem como parte da instrução.
+* **Resultado:** A IA gerava imagens divididas no meio (split-screen) ou fundia duas pessoas em uma só aberração genética.
+
+**A Solução (Composition Enforcement):**
+1.  **Regra Anti-Divisão:** Injeção de uma *System Constraint* explícita: "STRICTLY OUTPUT A SINGLE IMAGE. DO NOT generate diptychs". Isso força a IA a ler a biometria, mas ignorar a diagramação da referência.
+2.  **Dual Subject Trigger:** Um detector lógico identifica quando 2 rostos são selecionados. O sistema então reescreve o prompt para definir explicitamente "Figura A" e "Figura B", garantindo a separação física e de identidade dos sujeitos na cena.
+
+### **Fase 8: Prompt Studio & Engenharia Reversa (v4.7)**
+
+**O Cenário:** Usuários têm dificuldade em descrever cenas cinematográficas ("Writer's Block").
+
+**A Solução:** Integração de um módulo "Prompt Studio" com três modos:
+1.  **Vision Analysis:** O usuário sobe uma foto de inspiração (estilo) e a IA faz a engenharia reversa, criando um prompt técnico baseado nela.
+2.  **Builder Estruturado:** Um construtor visual para montar cenas complexas sem digitar texto.
+3.  **Refinement Loop:** O texto bruto do usuário passa por uma camada de "Visual Art Critic", que expande termos simples ("praia") para descrições de alto nível ("golden hour, volumetric lighting, 8k texture").
+
 ## **3\. Conclusão**
 
-O FaceGen Pro v3.9 evoluiu de um simples gerador para uma suíte de engenharia de prompt. A introdução do **Genetic Firewall** prova que, para obter consistência profissional em IA, é necessário controlar a entrada de dados (Input) com tanto rigor quanto o modelo de processamento.
+O FaceGen Pro v4.7 evoluiu de um simples gerador para uma suíte completa de direção de arte assistida por IA. A introdução do **Composition Enforcement** e do suporte nativo a **Multi-Subject (Casais)** resolveu as últimas barreiras para a geração de imagens fotorrealistas complexas sem artefatos de layout.
